@@ -62,6 +62,7 @@ class ContextKeys {
   set ( keys: Keys ): void; // And alias for the "add" method
 
   remove ( key: Key ): void; // Remove a single context key
+  remove ( keys: Key[] ): void; // Remove an array of context keys
   remove ( keys: Keys ): void; // Remove an object of context keys
 
   reset (): void; // Remove all context keys and change handlers

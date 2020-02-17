@@ -46,6 +46,13 @@ benchmark.group ( 'remove', () => {
   });
 
   benchmark ({
+    name: 'array',
+    fn: ctx => {
+      ctx.ck.remove ([ 'boolean', 'string' ]);
+    }
+  });
+
+  benchmark ({
     name: 'object',
     fn: ctx => {
       ctx.ck.remove ( Fixtures.keys );

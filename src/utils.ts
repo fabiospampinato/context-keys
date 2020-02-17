@@ -3,6 +3,12 @@
 
 const Utils = {
 
+  isArray: ( x: any ): x is any[] => {
+
+    return Array.isArray ( x );
+
+  },
+
   isString ( x: any ): x is string {
 
     return typeof x === 'string';

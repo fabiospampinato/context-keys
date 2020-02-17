@@ -64,8 +64,9 @@ class ContextKeys {
   }
 
   remove ( key: Key ): void;
+  remove ( keys: Key[] ): void
   remove ( keys: Keys ): void
-  remove ( keys: Key | Keys ): void {
+  remove ( keys: Key | Key[] | Keys ): void {
 
     if ( Utils.isString ( keys ) ) {
 
@@ -74,6 +75,20 @@ class ContextKeys {
       this.keys[keys] = undefined;
 
       this.triggerChange ( keys );
+
+    } else if ( Utils.isArray ( keys ) ) {
+
+      for ( let i = 0, l = keys.length; i < l; i++ ) {
+
+        const key = keys[i];
+
+        if ( Utils.isUndefined ( this.keys[key] ) ) continue;
+
+        this.keys[key] = undefined;
+
+        this.triggerChange ( key );
+
+      }
 
     } else {
 

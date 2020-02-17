@@ -150,6 +150,16 @@ describe ( 'Context Keys', it => {
 
     });
 
+    it ( 'can remove an array of keys', t => {
+
+      const ck = new ContextKeys ( Fixtures.keys );
+
+      ck.remove ([ 'boolean', 'string', 'object' ]);
+
+      t.deepEqual ( ck.get (), { null: null, number: 123 } );
+
+    });
+
     it ( 'can remove a single key', t => {
 
       const ck = new ContextKeys ( Fixtures.keys );
