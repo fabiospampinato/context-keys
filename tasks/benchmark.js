@@ -100,7 +100,16 @@ benchmark.group ( 'eval', () => {
 benchmark.group ( 'change', () => {
 
   benchmark ({
-    name: 'add',
+    name: 'add:general',
+    fn: ctx => {
+      ctx.ck.onChange ( noop );
+      ctx.ck.onChange ( noop );
+      ctx.ck.onChange ( noop );
+    }
+  });
+
+  benchmark ({
+    name: 'add:expression',
     fn: ctx => {
       ctx.ck.onChange ( 'boolean', noop );
       ctx.ck.onChange ( 'boolean && string', noop );
@@ -109,7 +118,25 @@ benchmark.group ( 'change', () => {
   });
 
   benchmark ({
-    name: 'remove',
+    name: 'remove:general',
+    beforeEach: ctx => {
+      ctx.ck = new ContextKeys ();
+      ctx.ck.add ( Mocks.keys );
+      ctx.disposers = [
+        ctx.ck.onChange ( noop ),
+        ctx.ck.onChange ( noop ),
+        ctx.ck.onChange ( noop )
+      ];
+    },
+    fn: ctx => {
+      for ( let i = 0, l = ctx.disposers.length; i < l; i++ ) {
+        ctx.disposers[i]();
+      }
+    }
+  });
+
+  benchmark ({
+    name: 'remove:expression',
     beforeEach: ctx => {
       ctx.ck = new ContextKeys ();
       ctx.ck.add ( Mocks.keys );
@@ -127,7 +154,7 @@ benchmark.group ( 'change', () => {
   });
 
   benchmark ({
-    name: 'trigger:nonexistent',
+    name: 'trigger:expression:nonexistent',
     before: ctx => {
       ctx.ck = new ContextKeys ();
       ctx.ck.add ( Mocks.keys );
@@ -145,7 +172,24 @@ benchmark.group ( 'change', () => {
   });
 
   benchmark ({
-    name: 'trigger:existent',
+    name: 'trigger:expression:general',
+    before: ctx => {
+      ctx.ck = new ContextKeys ();
+      ctx.ck.add ( Mocks.keys );
+      for ( let i = 0, l = 1000; i < l; i++ ) {
+        ctx.ck.onChange ( noop );
+        ctx.ck.onChange ( noop );
+        ctx.ck.onChange ( noop );
+      }
+    },
+    beforeEach: noop,
+    fn: ( ctx, i ) => {
+      ctx.ck.set ( 'boolean', !!( i % 2 ) );
+    }
+  });
+
+  benchmark ({
+    name: 'trigger:expression:existent',
     before: ctx => {
       ctx.ck = new ContextKeys ();
       ctx.ck.add ( Mocks.keys );

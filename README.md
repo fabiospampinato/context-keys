@@ -47,6 +47,7 @@ type Values = Record<string, Value>;
 type Key = string;
 type Keys = Record<string, Value | undefined>;
 type Expr = string;
+type ChangeAllHandler = () => void;
 type ChangeHandler = ( value: boolean ) => void;
 type Disposer = () => void;
 
@@ -70,6 +71,7 @@ class ContextKeys {
 
   eval ( expression: Expr ): boolean; // Evaluate an expression to a boolean
 
+  onChange ( handler: ChangeAllHandler ): Disposer; // Register a callback which will be called whenever any context key changes
   onChange ( expression: Expr, handler: ChangeHandler ): Disposer; // Register a callback which will be called whenever the value of the expression changes. Call the disposer to unregister the callback
 
 }
@@ -102,6 +104,10 @@ console.log ( ck.get ( 'isBaz' ) ); // => undefined
 
 console.log ( ck.eval ( 'isFoo || isBar' ) ); // => true
 console.log ( ck.eval ( 'isFoo && ( isBar || !settings.bar || settings.foo.length > 1 )' ) ); // => true
+
+ck.onChange ( () => { // Register a general onChange handler
+  console.log ( 'Something changed!' );
+});
 
 ck.onChange ( 'isFoo', value => { // Register an onChange handler
   console.log ( 'isFoo changed!' );

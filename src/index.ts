@@ -1,7 +1,7 @@
 
 /* IMPORT */
 
-import {Value, Values, Key, Keys, Expr, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer} from './types';
+import {Value, Values, Key, Keys, Expr, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer} from './types';
 import Expression from './expression';
 import Utils from './utils';
 
@@ -11,6 +11,7 @@ class ContextKeys {
 
   private keys: Keys;
   private handlers: ChangeHandlerData[];
+  private handlersAll: ChangeAllHandler[];
   private handlersTree: ChangeHandlersTree;
   private getBound: Function = this.get.bind ( this );
 
@@ -94,6 +95,7 @@ class ContextKeys {
 
     this.keys = {};
     this.handlers = [];
+    this.handlersAll = [];
     this.handlersTree = {};
 
   }
@@ -136,6 +138,8 @@ class ContextKeys {
 
   private triggerChange ( key: Key ): void {
 
+    this.handlersAll.forEach ( handler => handler () );
+
     const handlersByKey = this.handlersTree[key];
 
     if ( !handlersByKey ) return;
@@ -163,41 +167,27 @@ class ContextKeys {
 
   }
 
-  onChange ( expression: Expr, handler: ChangeHandler ): Disposer {
+  onChange ( handler: ChangeAllHandler ): Disposer;
+  onChange ( expression: Expr, handler: ChangeHandler ): Disposer;
+  onChange ( expression: Expr | ChangeAllHandler, handler?: ChangeHandler ): Disposer {
 
-    const exprData = Expression.parse ( expression ),
-          {keys} = exprData,
-          value = Expression.eval ( exprData, this.getBound ),
-          data: ChangeHandlerData = { handler, value },
-          {handlers, handlersTree} = this;
+    if ( Utils.isString ( expression ) ) {
 
-    handlers[handlers.length] = data;
+      handler = handler as ChangeHandler; //TSC
 
-    for ( let i = 0, l = keys.length; i < l; i++ ) {
+      const exprData = Expression.parse ( expression ),
+            {keys} = exprData,
+            value = Expression.eval ( exprData, this.getBound ),
+            data: ChangeHandlerData = { handler, value },
+            {handlers, handlersTree} = this;
 
-      const key = keys[i];
-
-      if ( !handlersTree[key] ) handlersTree[key] = {};
-
-      const handlersByKey = handlersTree[key];
-
-      if ( !handlersByKey[expression] ) handlersByKey[expression] = [];
-
-      const handlersByExpression = handlersByKey[expression];
-
-      handlersByExpression[handlersByExpression.length] = data;
-
-    }
-
-    return () => {
-
-      handlers.splice ( handlers.indexOf ( data ), 1 );
+      handlers[handlers.length] = data;
 
       for ( let i = 0, l = keys.length; i < l; i++ ) {
 
         const key = keys[i];
 
-        if ( !handlersTree[key] ) continue;
+        if ( !handlersTree[key] ) handlersTree[key] = {};
 
         const handlersByKey = handlersTree[key];
 
@@ -205,11 +195,43 @@ class ContextKeys {
 
         const handlersByExpression = handlersByKey[expression];
 
-        handlersByExpression.splice ( handlersByExpression.indexOf ( data ), 1 );
+        handlersByExpression[handlersByExpression.length] = data;
 
       }
 
-    };
+      return () => {
+
+        handlers.splice ( handlers.indexOf ( data ), 1 );
+
+        for ( let i = 0, l = keys.length; i < l; i++ ) {
+
+          const key = keys[i];
+
+          if ( !handlersTree[key] ) continue;
+
+          const handlersByKey = handlersTree[key];
+
+          if ( !handlersByKey[expression] ) handlersByKey[expression] = [];
+
+          const handlersByExpression = handlersByKey[expression];
+
+          handlersByExpression.splice ( handlersByExpression.indexOf ( data ), 1 );
+
+        }
+
+      };
+
+    } else {
+
+      this.handlersAll.push ( expression );
+
+      return () => {
+
+        this.handlersAll = this.handlersAll.filter ( h => h !== expression );
+
+      };
+
+    }
 
   }
 

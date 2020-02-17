@@ -238,6 +238,21 @@ describe ( 'Context Keys', it => {
 
   describe ( 'onChange', it => {
 
+    it ( 'calls a function when anything changes', t => {
+
+      t.plan ( 2 );
+
+      const ck = new ContextKeys ( Mocks.keys );
+
+      ck.onChange ( ( ...args ) => t.deepEqual ( args, [] ) );
+
+      ck.set ( 'boolean', false );
+      ck.set ( 'boolean', true );
+      ck.remove ( 'missing' );
+      ck.remove ( 'boolean' );
+
+    });
+
     it ( 'calls a function when a property changes', t => {
 
       t.plan ( 4 );
@@ -261,8 +276,10 @@ describe ( 'Context Keys', it => {
     it ( 'returns a disposer', t => {
 
       const ck = new ContextKeys ( Mocks.keys ),
+            disposeAll = ck.onChange ( () => t.fail () ),
             dispose = ck.onChange ( 'boolean', () => t.fail () );
 
+      disposeAll ();
       dispose ();
 
       ck.set ( 'boolean', true );

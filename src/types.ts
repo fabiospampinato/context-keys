@@ -18,6 +18,7 @@ type ExprData = {
   fn: ExprFN
 };
 
+type ChangeAllHandler = () => void;
 type ChangeHandler = ( value: boolean ) => void;
 type ChangeHandlerData = {
   handler: ChangeHandler,
@@ -29,4 +30,4 @@ type Disposer = () => void;
 
 /* EXPORT */
 
-export {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer};
+export {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer};
