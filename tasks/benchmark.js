@@ -2,7 +2,7 @@
 /* IMPORT */
 
 const {default: ContextKeys} = require ( '../dist' ),
-      Mocks = require ( '../test/mocks' ),
+      Fixtures = require ( '../test/fixtures' ),
       benchmark = require ( 'benchloop' );
 
 /* BENCHMARK */
@@ -14,7 +14,7 @@ benchmark.defaultOptions = Object.assign ( benchmark.defaultOptions, {
   log: 'compact',
   beforeEach: ctx => {
     ctx.ck = new ContextKeys ();
-    ctx.ck.add ( Mocks.keys );
+    ctx.ck.add ( Fixtures.keys );
   }
 });
 
@@ -48,7 +48,7 @@ benchmark.group ( 'remove', () => {
   benchmark ({
     name: 'object',
     fn: ctx => {
-      ctx.ck.remove ( Mocks.keys );
+      ctx.ck.remove ( Fixtures.keys );
     }
   });
 
@@ -121,7 +121,7 @@ benchmark.group ( 'change', () => {
     name: 'remove:general',
     beforeEach: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Mocks.keys );
+      ctx.ck.add ( Fixtures.keys );
       ctx.disposers = [
         ctx.ck.onChange ( noop ),
         ctx.ck.onChange ( noop ),
@@ -139,7 +139,7 @@ benchmark.group ( 'change', () => {
     name: 'remove:expression',
     beforeEach: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Mocks.keys );
+      ctx.ck.add ( Fixtures.keys );
       ctx.disposers = [
         ctx.ck.onChange ( 'boolean', noop ),
         ctx.ck.onChange ( 'boolean && string', noop ),
@@ -157,7 +157,7 @@ benchmark.group ( 'change', () => {
     name: 'trigger:expression:nonexistent',
     before: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Mocks.keys );
+      ctx.ck.add ( Fixtures.keys );
       for ( let i = 0, l = 1000; i < l; i++ ) {
         ctx.ck.onChange ( 'boolean', noop );
         ctx.ck.onChange ( 'boolean && string', noop );
@@ -175,7 +175,7 @@ benchmark.group ( 'change', () => {
     name: 'trigger:expression:general',
     before: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Mocks.keys );
+      ctx.ck.add ( Fixtures.keys );
       for ( let i = 0, l = 1000; i < l; i++ ) {
         ctx.ck.onChange ( noop );
         ctx.ck.onChange ( noop );
@@ -192,7 +192,7 @@ benchmark.group ( 'change', () => {
     name: 'trigger:expression:existent',
     before: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Mocks.keys );
+      ctx.ck.add ( Fixtures.keys );
       for ( let i = 0, l = 1000; i < l; i++ ) {
         ctx.ck.onChange ( 'boolean', noop );
         ctx.ck.onChange ( 'boolean && string', noop );

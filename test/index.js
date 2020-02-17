@@ -4,7 +4,7 @@
 import {describe} from 'ava-spec';
 import Parser from '../src/expression/parser.js';
 import ContextKeys from '../dist';
-import Mocks from './mocks';
+import Fixtures from './fixtures';
 
 /* PARSER */
 
@@ -105,9 +105,9 @@ describe ( 'Context Keys', it => {
 
     it ( 'supports initial keys', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
-      t.deepEqual ( ck.get (), Mocks.keys );
+      t.deepEqual ( ck.get (), Fixtures.keys );
 
     });
 
@@ -119,9 +119,9 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ();
 
-      ck.add ( Mocks.keys );
+      ck.add ( Fixtures.keys );
 
-      t.deepEqual ( ck.get (), Mocks.keys );
+      t.deepEqual ( ck.get (), Fixtures.keys );
 
     });
 
@@ -142,9 +142,9 @@ describe ( 'Context Keys', it => {
 
     it ( 'can remove an object of keys', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
-      ck.remove ( Mocks.keys );
+      ck.remove ( Fixtures.keys );
 
       t.deepEqual ( ck.get (), {} );
 
@@ -152,7 +152,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'can remove a single key', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       ck.remove ( 'boolean' );
       ck.remove ( 'string' );
@@ -168,7 +168,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'can remove all keys', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       ck.reset ();
 
@@ -182,15 +182,15 @@ describe ( 'Context Keys', it => {
 
     it ( 'can retrieve all values', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
-      t.deepEqual ( ck.get (), Mocks.keys );
+      t.deepEqual ( ck.get (), Fixtures.keys );
 
     });
 
     it ( 'can retrieve a single value', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       t.is ( ck.get ( 'null' ), null );
       t.is ( ck.get ( 'xxx' ), undefined );
@@ -203,7 +203,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'can evaluate an expression', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       t.is ( ck.eval ( 'string' ), true );
       t.is ( ck.eval ( 'boolean || number' ), true );
@@ -215,7 +215,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'works with invalid expressions', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       t.is ( ck.eval ( 'function () {}' ), false );
       t.is ( ck.eval ( 'const foo = 123' ), false );
@@ -225,7 +225,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'works with invalid keys', t => {
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       t.is ( ck.eval ( 'isMissing' ), false );
       t.is ( ck.eval ( 'string && isMissing' ), false );
@@ -242,7 +242,7 @@ describe ( 'Context Keys', it => {
 
       t.plan ( 2 );
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       ck.onChange ( ( ...args ) => t.deepEqual ( args, [] ) );
 
@@ -257,7 +257,7 @@ describe ( 'Context Keys', it => {
 
       t.plan ( 4 );
 
-      const ck = new ContextKeys ( Mocks.keys );
+      const ck = new ContextKeys ( Fixtures.keys );
 
       ck.onChange ( 'boolean', value => t.is ( value, true ) );
       ck.onChange ( 'boolean', value => t.is ( value, true ) );
@@ -275,7 +275,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'returns a disposer', t => {
 
-      const ck = new ContextKeys ( Mocks.keys ),
+      const ck = new ContextKeys ( Fixtures.keys ),
             disposeAll = ck.onChange ( () => t.fail () ),
             dispose = ck.onChange ( 'boolean', () => t.fail () );
 

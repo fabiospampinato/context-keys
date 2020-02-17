@@ -1,7 +1,7 @@
 
-/* MOCKS */
+/* FIXTURES */
 
-const Mocks = {
+const Fixtures = {
   keys: {
     null: null,
     number: 123,
@@ -17,4 +17,4 @@ const Mocks = {
 
 /* EXPORT */
 
-module.exports = Mocks;
+module.exports = Fixtures;
