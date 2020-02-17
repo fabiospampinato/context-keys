@@ -78,6 +78,13 @@ benchmark.group ( 'get', () => {
   });
 
   benchmark ({
+    name: 'array',
+    fn: ctx => {
+      ctx.ck.get ([ 'boolean', 'string' ]);
+    }
+  });
+
+  benchmark ({
     name: 'all',
     fn: ctx => {
       ctx.ck.get ();

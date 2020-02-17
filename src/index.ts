@@ -116,12 +116,30 @@ class ContextKeys {
   }
 
   get ( key: Key ): Value | undefined;
+  get ( keys: Key[] ): Values;
   get (): Values;
-  get ( key?: Key ): Value | Values | undefined {
+  get ( key?: Key | Key[] ): Value | Values | undefined {
 
     if ( Utils.isString ( key ) ) {
 
       return this.keys[key];
+
+    } else if ( Utils.isArray ( key ) ) {
+
+      const values: Values = {};
+
+      for ( let i = 0, l = key.length; i < l; i++ ) {
+
+        const k = key[i],
+              value = this.keys[k];
+
+        if ( Utils.isUndefined ( value ) ) continue;
+
+        values[k] = value;
+
+      }
+
+      return values;
 
     } else {
 

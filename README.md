@@ -68,6 +68,7 @@ class ContextKeys {
   reset (): void; // Remove all context keys and change handlers
 
   get ( key: Key ): Value | undefined; // Get the value of a context key
+  get ( keys: Key[] ): Values; // Get the value of an array of context keys
   get (): Values; // Get the value of all context keys
 
   eval ( expression: Expr ): boolean; // Evaluate an expression to a boolean

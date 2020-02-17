@@ -198,6 +198,16 @@ describe ( 'Context Keys', it => {
 
     });
 
+    it ( 'can retrieve multiple values', t => {
+
+      const ck = new ContextKeys ( Fixtures.keys );
+
+      const result = ck.get ([ 'boolean', 'string' ]);
+
+      t.deepEqual ( result, { boolean: false, string: 'str' } );
+
+    });
+
     it ( 'can retrieve a single value', t => {
 
       const ck = new ContextKeys ( Fixtures.keys );
