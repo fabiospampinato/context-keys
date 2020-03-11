@@ -1,7 +1,6 @@
 
 /* IMPORT */
 
-import Parser = require ( '../../src/expression/parser.js' ); //UGLY
 import {Key, Expr, ExprFN, ExprData} from '../types';
 import Utils from '../utils';
 
@@ -99,6 +98,8 @@ const Expression = {
   },
 
   parseAdvanced: ( expression: Expr ): ExprData => {
+
+    const Parser = require ( '../../src/expression/parser.js' ); //UGLY
 
     Parser.parse ( expression ); // Checking for validity
 
