@@ -103,22 +103,64 @@ benchmark.group ( 'get', () => {
 benchmark.group ( 'eval', () => {
 
   benchmark ({
-    name: 'single',
+    name: 'simple:key',
     fn: ctx => {
       ctx.ck.eval ( 'boolean' );
     }
   });
 
   benchmark ({
-    name: 'multiple',
+    name: 'simple:!key',
     fn: ctx => {
-      ctx.ck.eval ( 'boolean && string && foo.bar' );
+      ctx.ck.eval ( '!boolean' );
+    }
+  });
+
+  benchmark ({
+    name: 'simple:and',
+    fn: ctx => {
+      ctx.ck.eval ( '!!boolean && string' );
+    }
+  });
+
+  benchmark ({
+    name: 'simple:or',
+    fn: ctx => {
+      ctx.ck.eval ( '!boolean || string' );
+    }
+  });
+
+  benchmark ({
+    name: 'nested:key',
+    fn: ctx => {
+      ctx.ck.eval ( 'object.foo.bar' );
+    }
+  });
+
+  benchmark ({
+    name: 'nested:and',
+    fn: ctx => {
+      ctx.ck.eval ( 'string && object.foo.bar' );
+    }
+  });
+
+  benchmark ({
+    name: 'nested:or',
+    fn: ctx => {
+      ctx.ck.eval ( '!string || object.foo.bar' );
+    }
+  });
+
+  benchmark ({
+    name: 'advanced',
+    fn: ctx => {
+      ctx.ck.eval ( 'boolean && ( !string || foo.bar )' );
     }
   });
 
 });
 
-benchmark.group ( 'change', () => {
+benchmark.group ( 'onChange', () => {
 
   benchmark ({
     name: 'add:general',
@@ -174,8 +216,12 @@ benchmark.group ( 'change', () => {
     }
   });
 
+});
+
+benchmark.group ( 'trigger', () => {
+
   benchmark ({
-    name: 'trigger:expression:nonexistent',
+    name: 'expression:nonexistent',
     before: ctx => {
       ctx.ck = new ContextKeys ();
       ctx.ck.add ( Fixtures.keys );
@@ -193,7 +239,7 @@ benchmark.group ( 'change', () => {
   });
 
   benchmark ({
-    name: 'trigger:expression:general',
+    name: 'expression:general',
     before: ctx => {
       ctx.ck = new ContextKeys ();
       ctx.ck.add ( Fixtures.keys );
@@ -210,7 +256,7 @@ benchmark.group ( 'change', () => {
   });
 
   benchmark ({
-    name: 'trigger:expression:existent',
+    name: 'expression:existent',
     before: ctx => {
       ctx.ck = new ContextKeys ();
       ctx.ck.add ( Fixtures.keys );

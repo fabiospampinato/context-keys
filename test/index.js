@@ -253,6 +253,7 @@ describe ( 'Context Keys', it => {
       t.is ( ck.eval ( 'function () {}' ), false );
       t.is ( ck.eval ( 'const foo = 123' ), false );
       t.is ( ck.eval ( 'throw new Error ();' ), false );
+      t.is ( ck.eval ( 'boolean[0].asd' ), false );
 
     });
 

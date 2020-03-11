@@ -170,9 +170,7 @@ class ContextKeys {
 
   eval ( expression: Expr ): boolean {
 
-    if ( expression in this.keys ) return !!this.get ( expression );
-
-    return Expression.eval ( expression, this.getBound );
+    return Expression.eval ( expression, this.hasBound, this.getBound );
 
   }
 
@@ -215,9 +213,9 @@ class ContextKeys {
 
       handler = handler as ChangeHandler; //TSC
 
-      const exprData = Expression.parse ( expression ),
+      const exprData = Expression.parse ( expression, this.hasBound ),
             {keys} = exprData,
-            value = Expression.eval ( exprData, this.getBound ),
+            value = Expression.eval ( exprData, this.hasBound, this.getBound ),
             data: ChangeHandlerData = { handler, value },
             {handlers, handlersTree} = this;
 
