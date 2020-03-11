@@ -18,6 +18,13 @@ benchmark.defaultOptions = Object.assign ( benchmark.defaultOptions, {
   }
 });
 
+benchmark ({
+  name: 'has',
+  fn: ctx => {
+    ctx.ck.has ( 'boolean' );
+  }
+});
+
 benchmark.group ( 'add', () => {
 
   benchmark ({

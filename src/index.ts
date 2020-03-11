@@ -14,6 +14,7 @@ class ContextKeys {
   private handlersAll: ChangeAllHandler[];
   private handlersTree: ChangeHandlersTree;
   private getBound: Function = this.get.bind ( this );
+  private hasBound: Function = this.has.bind ( this );
 
   constructor ( keys?: Keys ) {
 
@@ -24,6 +25,12 @@ class ContextKeys {
       this.add ( keys );
 
     }
+
+  }
+
+  has ( key ): boolean {
+
+    return key in this.keys;
 
   }
 

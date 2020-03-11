@@ -113,6 +113,19 @@ describe ( 'Context Keys', it => {
 
   });
 
+  describe ( 'has', it => {
+
+    it ( 'checks if a context key is defined', t => {
+
+      const ck = new ContextKeys ( Fixtures.keys );
+
+      t.true ( ck.has ( 'boolean' ) );
+      t.false ( ck.has ( 'test' ) );
+
+    });
+
+  });
+
   describe ( 'add', it => {
 
     it ( 'can add an object of keys', t => {
