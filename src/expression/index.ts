@@ -11,7 +11,7 @@ const Expression = {
 
   identifierRe: /(^|[\s(|&?:^=<>+*/%~!-])([a-zA-Z_\$][a-zA-Z_0-9]*)([\s)|&?:^=<>+*/%~!.-]|$)/g,
   expressionSimpleKeyRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*$/,
-  expressionSimpleBooleanRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*(&&|\|\|)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)(?:\s*(\3)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*))*\s*$/,
+  expressionSimpleBooleanRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*(&&|\|\|)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)(?:\s*(\4)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*))*\s*$/,
   reservedRe: /^(null|true|false|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|new|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)$/,
 
   parseFallback: ( expression: Expr ): ExprData => {
