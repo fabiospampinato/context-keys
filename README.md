@@ -55,6 +55,8 @@ class ContextKeys {
 
   constructor ( keys?: Keys ); // Create a new instance, optionally adding an object of context keys
 
+  has ( key: Key : boolean; // Checks if a context key is defined
+
   add ( key: Key, value: Value ): void; // Add a single context key
   add ( keys: Keys ): void; // Add an object of context keys
 
