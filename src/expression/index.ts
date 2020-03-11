@@ -12,23 +12,18 @@ const Expression = {
   identifierRe: /(^|[\s(|&?:^=<>+*/%~!-])([a-zA-Z_\$][a-zA-Z_0-9]*)([\s)|&?:^=<>+*/%~!.-]|$)/g,
   reservedRe: /^(null|true|false|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|new|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)$/,
 
-  check: Utils.memoize ( ( expression: Expr ): void => {
-
-    Parser.parse ( expression );
-
-  }),
-
   parse: Utils.memoize ( ( expression: Expr ): ExprData => {
 
     try {
 
-      Expression.check ( expression );
+      Parser.parse ( expression ); // Checking for validity
 
-      const keys: Key[] = [];
+      const keysObj: Record<string, string> = {},
+            keys: Key[] = [];
 
       const expressionWrapped = expression.replace ( Expression.identifierRe, ( match, $1, $2, $3 ) => {
         if ( Expression.reservedRe.test ( $2 ) ) return match;
-        if ( keys.indexOf ( $2 ) === -1 ) keys[keys.length] = $2;
+        if ( !keysObj[$2] ) keys[keys.length] = keysObj[$2] = $2;
         return `${$1}this('${$2}')${$3}`;
       });
 

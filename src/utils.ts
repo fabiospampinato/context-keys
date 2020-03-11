@@ -17,19 +17,19 @@ const Utils = {
 
   isUndefined ( x: any ): x is undefined {
 
-    return typeof x === 'undefined';
+    return x === undefined;
 
   },
 
-  memoize<T extends Function> ( fn: T ) {
+  memoize<T extends Function> ( fn: T ): T {
+
+    // return fn; // Enable this for benchmarking the parser
 
     const cache = {};
 
     return function memoized ( key: string ) {
 
-      if ( key in cache ) return cache[key];
-
-      return cache[key] = fn.apply ( undefined, arguments );
+      return cache[key] || ( cache[key] = fn.apply ( undefined, arguments ) );
 
     } as unknown as T;
 
