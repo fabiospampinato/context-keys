@@ -123,6 +123,10 @@ describe ( 'Context Keys', it => {
       t.true ( ck.has ( 'boolean' ) );
       t.false ( ck.has ( 'test' ) );
 
+      ck.remove ( 'boolean' );
+
+      t.false ( ck.has ( 'boolean' ) );
+
     });
 
   });

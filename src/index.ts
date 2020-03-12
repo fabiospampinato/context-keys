@@ -32,7 +32,7 @@ class ContextKeys {
 
   has ( key ): boolean {
 
-    return key in this.keys;
+    return !Utils.isUndefined ( this.keys[key] );
 
   }
 
