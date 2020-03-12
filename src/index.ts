@@ -79,8 +79,6 @@ class ContextKeys {
 
     if ( Utils.isString ( keys ) ) {
 
-      if ( Utils.isUndefined ( this.keys[keys] ) ) return;
-
       this.keys[keys] = undefined;
 
       this.scheduleChange ( keys );
@@ -91,8 +89,6 @@ class ContextKeys {
 
         const key = keys[i];
 
-        if ( Utils.isUndefined ( this.keys[key] ) ) continue;
-
         this.keys[key] = undefined;
 
         this.scheduleChange ( key );
@@ -102,8 +98,6 @@ class ContextKeys {
     } else {
 
       for ( const key in keys ) {
-
-        if ( Utils.isUndefined ( this.keys[key] ) ) continue;
 
         this.keys[key] = undefined;
 
