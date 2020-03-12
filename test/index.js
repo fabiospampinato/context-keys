@@ -2,6 +2,7 @@
 /* IMPORT */
 
 import {describe} from 'ava-spec';
+import delay from 'promise-resolve-timeout';
 import Parser from '../src/expression/parser.js';
 import ContextKeys from '../dist';
 import Fixtures from './fixtures';
@@ -272,9 +273,43 @@ describe ( 'Context Keys', it => {
 
   describe ( 'onChange', it => {
 
-    it ( 'calls a function when anything changes', t => {
+    it ( 'batches and coaleshes calls together', async t => {
 
-      t.plan ( 2 );
+      const ck = new ContextKeys ( Fixtures.keys );
+
+      let callsAllNr = 0,
+          callsKeyNr = 0;
+
+      ck.onChange ( () => callsAllNr++ );
+      ck.onChange ( 'boolean', () => callsKeyNr++ );
+
+      ck.set ( 'boolean', false );
+      ck.set ( 'boolean', true );
+      ck.set ( 'boolean', false );
+
+      t.is ( callsAllNr, 0 );
+      t.is ( callsKeyNr, 0 );
+
+      await delay ( 100 );
+
+      t.is ( callsAllNr, 1 );
+      t.is ( callsKeyNr, 0 );
+
+      ck.set ( 'boolean', true );
+
+      t.is ( callsAllNr, 1 );
+      t.is ( callsKeyNr, 0 );
+
+      await delay ( 100 );
+
+      t.is ( callsAllNr, 2 );
+      t.is ( callsKeyNr, 1 );
+
+    });
+
+    it ( 'calls a function when anything changes', async t => {
+
+      t.plan ( 1 );
 
       const ck = new ContextKeys ( Fixtures.keys );
 
@@ -285,9 +320,11 @@ describe ( 'Context Keys', it => {
       ck.remove ( 'missing' );
       ck.remove ( 'boolean' );
 
+      await delay ( 100 );
+
     });
 
-    it ( 'calls a function when a property changes', t => {
+    it ( 'calls a function when a property changes', async t => {
 
       t.plan ( 4 );
 
@@ -305,9 +342,11 @@ describe ( 'Context Keys', it => {
       ck.set ( 'bar', undefined );
       ck.remove ( 'bar' );
 
+      await delay ( 100 );
+
     });
 
-    it ( 'returns a disposer', t => {
+    it ( 'returns a disposer', async t => {
 
       const ck = new ContextKeys ( Fixtures.keys ),
             disposeAll = ck.onChange ( () => t.fail () ),
@@ -317,6 +356,8 @@ describe ( 'Context Keys', it => {
       dispose ();
 
       ck.set ( 'boolean', true );
+
+      await delay ( 100 );
 
       t.pass ();
 

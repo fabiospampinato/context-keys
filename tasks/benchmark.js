@@ -15,6 +15,9 @@ benchmark.defaultOptions = Object.assign ( benchmark.defaultOptions, {
   beforeEach: ctx => {
     ctx.ck = new ContextKeys ();
     ctx.ck.add ( Fixtures.keys );
+  },
+  afterEach: ctx => {
+    ctx.ck.reset ();
   }
 });
 
@@ -31,6 +34,8 @@ benchmark.group ( 'add', () => {
     name: 'string',
     fn: ( ctx, i ) => {
       ctx.ck.add ( String ( i ), true );
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -38,6 +43,8 @@ benchmark.group ( 'add', () => {
     name: 'object',
     fn: ( ctx, i ) => {
       ctx.ck.add ({ [i]: true });
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -49,6 +56,8 @@ benchmark.group ( 'remove', () => {
     name: 'string',
     fn: ctx => {
       ctx.ck.remove ( 'boolean' );
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -56,6 +65,8 @@ benchmark.group ( 'remove', () => {
     name: 'array',
     fn: ctx => {
       ctx.ck.remove ([ 'boolean', 'string' ]);
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -63,6 +74,8 @@ benchmark.group ( 'remove', () => {
     name: 'object',
     fn: ctx => {
       ctx.ck.remove ( Fixtures.keys );
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -235,6 +248,8 @@ benchmark.group ( 'trigger', () => {
     fn: ctx => {
       ctx.ck.set ( 'nonexistent', true );
       ctx.ck.set ( 'boolean', false );
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -252,6 +267,8 @@ benchmark.group ( 'trigger', () => {
     beforeEach: noop,
     fn: ( ctx, i ) => {
       ctx.ck.set ( 'boolean', !!( i % 2 ) );
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 
@@ -269,6 +286,8 @@ benchmark.group ( 'trigger', () => {
     beforeEach: noop,
     fn: ( ctx, i ) => {
       ctx.ck.set ( 'boolean', !!( i % 2 ) );
+      ctx.ck.scheduleTrigger ();
+      ctx.ck.scheduleClear ();
     }
   });
 

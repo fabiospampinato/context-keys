@@ -8,6 +8,7 @@ Performant and feature rich library for managing context keys.
 - **Performant**: this library is about as fast as it gets, and it has 0 dependencies.
 - **Flexible**: Context keys can be primitives, arrays or plain objects.
 - **Expressive**: Expressions are written in a full-fledged subset of JavaScript, this allows you to write complex expressions like `isFoo && ( !isBar || settings.foo[3] === "foo" )`.
+- **Batching**: changes are batched and coalesced together for performance automatically.
 
 ## Expression Syntax
 

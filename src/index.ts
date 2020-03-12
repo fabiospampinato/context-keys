@@ -13,6 +13,8 @@ class ContextKeys {
   private handlers: ChangeHandlerData[];
   private handlersAll: ChangeAllHandler[];
   private handlersTree: ChangeHandlersTree;
+  private scheduledKeys: Set<Key>;
+  private scheduledId?: number;
   private getBound: Function = this.get.bind ( this );
   private hasBound: Function = this.has.bind ( this );
 
@@ -44,7 +46,7 @@ class ContextKeys {
 
       this.keys[keys] = value;
 
-      this.triggerChange ( keys );
+      this.scheduleChange ( keys );
 
     } else {
 
@@ -54,7 +56,7 @@ class ContextKeys {
 
         this.keys[key] = keys[key];
 
-        this.triggerChange ( key );
+        this.scheduleChange ( key );
 
       }
 
@@ -81,7 +83,7 @@ class ContextKeys {
 
       this.keys[keys] = undefined;
 
-      this.triggerChange ( keys );
+      this.scheduleChange ( keys );
 
     } else if ( Utils.isArray ( keys ) ) {
 
@@ -93,7 +95,7 @@ class ContextKeys {
 
         this.keys[key] = undefined;
 
-        this.triggerChange ( key );
+        this.scheduleChange ( key );
 
       }
 
@@ -105,7 +107,7 @@ class ContextKeys {
 
         this.keys[key] = undefined;
 
-        this.triggerChange ( key );
+        this.scheduleChange ( key );
 
       }
 
@@ -119,6 +121,9 @@ class ContextKeys {
     this.handlers = [];
     this.handlersAll = [];
     this.handlersTree = {};
+    this.scheduledKeys = new Set ();
+
+    this.scheduleClear ();
 
   }
 
@@ -174,34 +179,70 @@ class ContextKeys {
 
   }
 
-  private triggerChange ( key: Key ): void {
+  private scheduleChange ( key: Key ): void {
 
-    this.handlersAll.forEach ( handler => handler () );
+    this.scheduledKeys.add ( key );
 
-    const handlersByKey = this.handlersTree[key];
+    if ( this.scheduledId ) return;
 
-    if ( !handlersByKey ) return;
+    this.scheduledId = setTimeout ( () => {
 
-    for ( let expression in handlersByKey ) {
+      delete this.scheduledId;
 
-      const handlersByExpression = handlersByKey[expression],
-            value = this.eval ( expression );
+      this.scheduleTrigger ();
 
-      for ( let i = 0, l = handlersByExpression.length; i < l; i++ ) {
+    });
 
-        const data = handlersByExpression[i];
+  }
 
-        if ( value === data.value ) continue;
+  private scheduleClear (): void {
 
-        data.value = value;
+    if ( !this.scheduledId ) return;
 
-        const {handler} = data;
+    clearTimeout ( this.scheduledId );
 
-        handler ( value );
+    delete this.scheduledId;
+
+  }
+
+  private scheduleTrigger (): void {
+
+    const handlersMap: Map<ChangeHandler, boolean> = new Map ();
+
+    for ( const key of this.scheduledKeys ) {
+
+      const handlersByKey = this.handlersTree[key];
+
+      if ( !handlersByKey ) continue;
+
+      for ( const expression in handlersByKey ) {
+
+        const handlersByExpression = handlersByKey[expression],
+              value = this.eval ( expression );
+
+        for ( let i = 0, l = handlersByExpression.length; i < l; i++ ) {
+
+          const data = handlersByExpression[i];
+
+          if ( value === data.value ) continue;
+
+          data.value = value;
+
+          const {handler} = data;
+
+          handlersMap.set ( handler, value );
+
+        }
 
       }
 
     }
+
+    this.scheduledKeys = new Set ();
+
+    this.handlersAll.forEach ( handler => handler () );
+
+    handlersMap.forEach ( ( value, handler ) => handler ( value ) );
 
   }
 
