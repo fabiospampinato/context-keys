@@ -10,7 +10,7 @@ const Expression = {
 
   identifierRe: /(^|[\s(|&?:^=<>+*/%~!-])([a-zA-Z_\$][a-zA-Z_0-9]*)([\s)|&?:^=<>+*/%~!.-]|$)/g,
   expressionSimpleKeyRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*$/,
-  expressionSimpleBooleanRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*(&&|\|\|)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)(?:\s*(\4)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*))*\s*$/,
+  expressionSimpleBooleanRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*(&&|\|\|)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)(?:\s*(\4)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*))*\s*$/, // Repeated capturing groups aren't actually supported, so we have to further parse strings matches by this regex unfortunately
   reservedRe: /^(null|true|false|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|new|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)$/,
 
   parseFallback: ( expression: Expr ): ExprData => {
@@ -61,27 +61,36 @@ const Expression = {
     if ( !match ) return;
 
     const operator = match[4],
-          expressionsWrapped: string[] = [],
+          expressionParts = expression.split ( operator ),
+          matches: RegExpExecArray[] = [];
+
+    for ( let i = 0, l = expressionParts.length; i < l; i++ ) {
+
+      const match = Expression.expressionSimpleKeyRe.exec ( expressionParts[i] );
+
+      if ( !match ) return;
+
+      matches.push ( match );
+
+    }
+
+    const expressionsWrapped: string[] = [],
           keysObj: Record<string, string> = {},
           keys: Key[] = [];
 
-    for ( let i = 1, l = match.length; i < l; i += 4 ) {
+    for ( let i = 0, l = matches.length; i < l; i++ ) {
 
-      const key = match[i + 1];
-
-      if ( !key ) break;
-
-      const member = match[i + 2] || '';
+      const [, bangsRaw, key, properties] = matches[i];
 
       if ( Expression.reservedRe.test ( key ) ) {
 
-        expressionsWrapped.push ( `${key}${member}` );
+        expressionsWrapped.push ( `${key}${properties}` );
 
       } else {
 
-        const bangs = ( !match[i] || match[i].length % 2 === 0 ) ? '!!' : '!';
+        const bangs = ( !bangsRaw || bangsRaw.length % 2 === 0 ) ? '!!' : '!';
 
-        expressionsWrapped.push ( `${bangs}this('${key}')${member}` );
+        expressionsWrapped.push ( `${bangs}this('${key}')${properties || ''}` );
 
         if ( !keysObj[key] ) keys[keys.length] = keysObj[key] = key;
 

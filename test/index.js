@@ -248,6 +248,8 @@ describe ( 'Context Keys', it => {
       t.is ( ck.eval ( 'boolean && number' ), false );
       t.is ( ck.eval ( 'object.foo["bar"] === true' ), true );
       t.is ( ck.eval ( '( boolean && !number ) || ( string === "str" && number )' ), true );
+      t.is ( ck.eval ( '!boolean && !boolean && boolean && !boolean && !boolean' ), false );
+      t.is ( ck.eval ( 'boolean || boolean || !boolean || boolean || boolean' ), true );
 
     });
 
