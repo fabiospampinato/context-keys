@@ -43,7 +43,7 @@ npm install --save context-keys
 The following interface is provided:
 
 ```ts
-type Value = null | boolean | number | string | Array<Value> | { [key: string]: Value };
+type Value = null | boolean | number | string | Array<Value> | { [key: string]: Value } | () => Value;
 type Values = Record<string, Value>;
 type Key = string;
 type Keys = Record<string, Value | undefined>;

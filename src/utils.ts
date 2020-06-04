@@ -9,6 +9,12 @@ const Utils = {
 
   },
 
+  isFunction: ( x: any ): x is Function => {
+
+    return typeof x === 'function';
+
+  },
+
   isString ( x: any ): x is string {
 
     return typeof x === 'string';

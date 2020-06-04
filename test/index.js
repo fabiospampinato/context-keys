@@ -108,7 +108,7 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ( Fixtures.keys );
 
-      t.deepEqual ( ck.get (), Fixtures.keys );
+      t.deepEqual ( ck.get (), Fixtures.keysResolved );
 
     });
 
@@ -121,11 +121,15 @@ describe ( 'Context Keys', it => {
       const ck = new ContextKeys ( Fixtures.keys );
 
       t.true ( ck.has ( 'boolean' ) );
+      t.true ( ck.has ( 'fnTrue' ) );
+      t.true ( ck.has ( 'fnFalse' ) );
       t.false ( ck.has ( 'test' ) );
 
       ck.remove ( 'boolean' );
+      ck.remove ( 'fnTrue' );
 
       t.false ( ck.has ( 'boolean' ) );
+      t.false ( ck.has ( 'fnTrue' ) );
 
     });
 
@@ -139,7 +143,7 @@ describe ( 'Context Keys', it => {
 
       ck.add ( Fixtures.keys );
 
-      t.deepEqual ( ck.get (), Fixtures.keys );
+      t.deepEqual ( ck.get (), Fixtures.keysResolved );
 
     });
 
@@ -149,8 +153,9 @@ describe ( 'Context Keys', it => {
 
       ck.add ( 'foo', true );
       ck.add ( 'bar', false );
+      ck.add ( 'fn', () => [1, 2, 3] );
 
-      t.deepEqual ( ck.get (), { foo: true, bar: false } );
+      t.deepEqual ( ck.get (), { foo: true, bar: false, fn: [1, 2, 3] } );
 
     });
 
@@ -172,9 +177,9 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ( Fixtures.keys );
 
-      ck.remove ([ 'boolean', 'string', 'object' ]);
+      ck.remove ([ 'boolean', 'string', 'object', 'fnTrue' ]);
 
-      t.deepEqual ( ck.get (), { null: null, number: 123 } );
+      t.deepEqual ( ck.get (), { null: null, number: 123, fnFalse: false } );
 
     });
 
@@ -185,8 +190,9 @@ describe ( 'Context Keys', it => {
       ck.remove ( 'boolean' );
       ck.remove ( 'string' );
       ck.remove ( 'object' );
+      ck.remove ( 'fnTrue' );
 
-      t.deepEqual ( ck.get (), { null: null, number: 123 } );
+      t.deepEqual ( ck.get (), { null: null, number: 123, fnFalse: false } );
 
     });
 
@@ -212,7 +218,7 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ( Fixtures.keys );
 
-      t.deepEqual ( ck.get (), Fixtures.keys );
+      t.deepEqual ( ck.get (), Fixtures.keysResolved );
 
     });
 
@@ -220,9 +226,9 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ( Fixtures.keys );
 
-      const result = ck.get ([ 'boolean', 'string' ]);
+      const result = ck.get ([ 'boolean', 'string', 'fnTrue' ]);
 
-      t.deepEqual ( result, { boolean: false, string: 'str' } );
+      t.deepEqual ( result, { boolean: false, string: 'str', fnTrue: true } );
 
     });
 
@@ -230,6 +236,8 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ( Fixtures.keys );
 
+      t.is ( ck.get ( 'fnTrue' ), true );
+      t.is ( ck.get ( 'fnFalse' ), false );
       t.is ( ck.get ( 'null' ), null );
       t.is ( ck.get ( 'xxx' ), undefined );
 
@@ -250,6 +258,12 @@ describe ( 'Context Keys', it => {
       t.is ( ck.eval ( '( boolean && !number ) || ( string === "str" && number )' ), true );
       t.is ( ck.eval ( '!boolean && !boolean && boolean && !boolean && !boolean' ), false );
       t.is ( ck.eval ( 'boolean || boolean || !boolean || boolean || boolean' ), true );
+      t.is ( ck.eval ( 'fnTrue' ), true );
+      t.is ( ck.eval ( '!fnTrue' ), false );
+      t.is ( ck.eval ( 'fnFalse' ), false );
+      t.is ( ck.eval ( '!fnFalse' ), true );
+      t.is ( ck.eval ( 'fnTrue && fnFalse' ), false );
+      t.is ( ck.eval ( 'fnFalse || fnTrue' ), true );
 
     });
 
@@ -332,7 +346,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'calls a function when a property changes', async t => {
 
-      t.plan ( 4 );
+      t.plan ( 6 );
 
       const ck = new ContextKeys ( Fixtures.keys );
 
@@ -341,12 +355,16 @@ describe ( 'Context Keys', it => {
       ck.onChange ( 'string', value => t.is ( value, false ) );
       ck.onChange ( 'foo', value => t.is ( value, true ) );
       ck.onChange ( 'bar', () => t.fail () );
+      ck.onChange ( 'fnTrue', value => t.is ( value, false ) );
+      ck.onChange ( 'fnFalse', value => t.is ( value, true ) );
 
       ck.set ( 'boolean', true );
       ck.remove ( 'string' );
       ck.set ( 'foo', 'foo' );
       ck.set ( 'bar', undefined );
       ck.remove ( 'bar' );
+      ck.set ( 'fnTrue', () => false );
+      ck.set ( 'fnFalse', () => true );
 
       await delay ( 100 );
 

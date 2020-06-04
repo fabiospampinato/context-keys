@@ -128,7 +128,9 @@ class ContextKeys {
 
     if ( Utils.isString ( key ) ) {
 
-      return this.keys[key];
+      const value = this.keys[key];
+
+      return Utils.isFunction ( value ) ? value () : value;
 
     } else if ( Utils.isArray ( key ) ) {
 
@@ -141,7 +143,7 @@ class ContextKeys {
 
         if ( Utils.isUndefined ( value ) ) continue;
 
-        values[k] = value;
+        values[k] = Utils.isFunction ( value ) ? value () : value;
 
       }
 
@@ -157,7 +159,7 @@ class ContextKeys {
 
         if ( Utils.isUndefined ( value ) ) continue;
 
-        values[key] = value;
+        values[key] = Utils.isFunction ( value ) ? value () : value;
 
       }
 

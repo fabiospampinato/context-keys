@@ -1,10 +1,11 @@
 
 /* TYPES */
 
-type Value = ValuePrimitive | ValueArray | ValueObject;
+type Value = ValuePrimitive | ValueArray | ValueObject | ValueDynamic;
 type ValuePrimitive = null | boolean | number | string;
 interface ValueArray extends Array<Value> {}
 type ValueObject = { [key: string]: Value };
+type ValueDynamic = () => ValuePrimitive | ValueArray | ValueObject;
 type Values = Record<string, Value>;
 
 type Key = string;
