@@ -11,7 +11,7 @@
     "clean": "npm run clean:dist && npm run clean:coverage",
     "compile": "tsc --skipLibCheck && tstei",
     "compile:watch": "tsc --skipLibCheck --watch",
-    "parser": "pegjs -O speed --cache -o src/expression/parser.js src/expression/parser.pegjs",
+    "parser": "pegjs -O size --cache -o src/expression/parser.js src/expression/parser.pegjs",
     "test": "ava",
     "test:watch": "ava --watch",
     "coverage": "nyc --reporter=html ava",

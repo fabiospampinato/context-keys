@@ -13,52 +13,7 @@ describe ( 'Parser', it => {
 
   it ( 'Parses all the supported syntax', t => {
 
-    const expression = `
-      null ||
-      true &&
-      false ||
-      123 ||
-      -0.123e10 ||
-      123 !== NaN ||
-      123 !== undefined ||
-      'str' ||
-      "str" ||
-      \`str\` ||
-      '\\n\\\\' ||
-      '\\uffff' ||
-      '\\xff' ||
-      ( true ? 123 : false ) ||
-      123 | 123 ||
-      123 ^ 123 ||
-      123 & 123 ||
-      123 === 123 ||
-      123 !== 123 ||
-      123 == 123 ||
-      123 != 123 ||
-      123 <= 123 ||
-      123 >= 123 ||
-      123 < 123 ||
-      123 > 123 ||
-      123 << 123 ||
-      123 >>> 123 ||
-      123 >> 123 ||
-      123 + 123 ||
-      123 - 123 ||
-      123 * 123 ||
-      123 / 123 ||
-      123 % 123 ||
-      +123 ||
-      -123 ||
-      ~123 ||
-      !123 ||
-      !( false || !( true ) ) ||
-      foo ||
-      foo123 ||
-      FoO ||
-      !foo ||
-      foo[0]['str'] ||
-      foo.bar.baz
-    `;
+    const expression = `null || true && false || 123 || -0.123e10 || 123 !== NaN || 123 !== undefined || 'str' || "str" || \`str\` || '\\n\\\\' || ( true ? 123 : false ) || 123 === 123 || 123 !== 123 || 123 == 123 || 123 != 123 || 123 <= 123 || 123 >= 123 || 123 < 123 || 123 > 123 || 123 + 123 || 123 - 123 || 123 * 123 || 123 / 123 || 123 % 123 || +123 || -123 || !123 || !( false || !( true ) ) || foo || foo123 || FoO || !foo || foo[0]['str'] || foo.bar.baz`;
 
     Parser.parse ( expression );
 
@@ -69,7 +24,14 @@ describe ( 'Parser', it => {
   it ( 'Throws with all unsupported syntax', t => {
 
     const expressions = [
-      'break',
+      '0xff',
+      '123 | 123',
+      '123 ^ 123',
+      '123 & 123',
+      '123 << 123',
+      '123 >>> 123',
+      '123 >> 123',
+      '~123',
       'function () {}',
       '/foo/',
       'eval ( "123" )',
@@ -264,6 +226,126 @@ describe ( 'Context Keys', it => {
       t.is ( ck.eval ( '!fnFalse' ), true );
       t.is ( ck.eval ( 'fnTrue && fnFalse' ), false );
       t.is ( ck.eval ( 'fnFalse || fnTrue' ), true );
+
+    });
+
+    it ( 'can evaluate an expression that doesn\'t use any variables', t => {
+
+      const ck = new ContextKeys ();
+
+      t.is ( ck.eval ( '    ' ), false );
+      t.is ( ck.eval ( 'yield' ), false );
+      t.is ( ck.eval ( 'with' ), false );
+      t.is ( ck.eval ( 'break' ), false );
+      t.is ( ck.eval ( 'null' ), false );
+      t.is ( ck.eval ( '!null' ), true );
+      t.is ( ck.eval ( '!!null' ), false );
+      t.is ( ck.eval ( '!!nullooo' ), false );
+      t.is ( ck.eval ( 'true' ), true );
+      t.is ( ck.eval ( '!true' ), false );
+      t.is ( ck.eval ( '!!true' ), true );
+      t.is ( ck.eval ( '!!trueee' ), false );
+      t.is ( ck.eval ( 'false' ), false );
+      t.is ( ck.eval ( '!false' ), true );
+      t.is ( ck.eval ( '!!false' ), false );
+      t.is ( ck.eval ( '!!falseee' ), false );
+      t.is ( ck.eval ( '0' ), false );
+      t.is ( ck.eval ( '!0' ), true );
+      t.is ( ck.eval ( '!!0' ), false );
+      t.is ( ck.eval ( '1' ), true );
+      t.is ( ck.eval ( '!1' ), false );
+      t.is ( ck.eval ( '!!1' ), true );
+      t.is ( ck.eval ( '' ), false );
+      t.is ( ck.eval ( '""' ), false );
+      t.is ( ck.eval ( '!""' ), true );
+      t.is ( ck.eval ( '"str"' ), true );
+      t.is ( ck.eval ( '!"str"' ), false );
+      t.is ( ck.eval ( '123' ), true );
+      t.is ( ck.eval ( '123e10' ), true );
+      t.is ( ck.eval ( '123e+10' ), true );
+      t.is ( ck.eval ( '123e-10' ), true );
+      t.is ( ck.eval ( '123E10' ), true );
+      t.is ( ck.eval ( '123E+10' ), true );
+      t.is ( ck.eval ( '123E-10' ), true );
+      t.is ( ck.eval ( '0.0' ), false );
+      t.is ( ck.eval ( '0.123' ), true );
+      t.is ( ck.eval ( '0.123e' ), false );
+      t.is ( ck.eval ( '0.123e10' ), true );
+      t.is ( ck.eval ( '0.123e+10' ), true );
+      t.is ( ck.eval ( '0.123e-10' ), true );
+      t.is ( ck.eval ( '0.123E10' ), true );
+      t.is ( ck.eval ( '0.123E+10' ), true );
+      t.is ( ck.eval ( '0.123E-10' ), true );
+      t.is ( ck.eval ( '.0' ), false );
+      t.is ( ck.eval ( '.123' ), true );
+      t.is ( ck.eval ( '0x' ), false );
+      t.is ( ck.eval ( '!0x' ), false );
+      t.is ( ck.eval ( '\'\'' ), false );
+      t.is ( ck.eval ( '\'\\\'\'' ), true );
+      t.is ( ck.eval ( '\'str\'' ), true );
+      t.is ( ck.eval ( '""' ), false );
+      t.is ( ck.eval ( '"\\\""' ), true );
+      t.is ( ck.eval ( '"str"' ), true );
+      t.is ( ck.eval ( '``' ), false );
+      t.is ( ck.eval ( '`\\\``' ), true );
+      t.is ( ck.eval ( '`str`' ), true );
+      t.is ( ck.eval ( '`\\\\`' ), true );
+      t.is ( ck.eval ( '`\\0`' ), true );
+      t.is ( ck.eval ( '`\\n`' ), true );
+      t.is ( ck.eval ( 'true ? true : false' ), true );
+      t.is ( ck.eval ( 'true ? false : false' ), false );
+      t.is ( ck.eval ( 'false ? false : true' ), true );
+      t.is ( ck.eval ( 'false ? false : false' ), false );
+      t.is ( ck.eval ( 'true ? (true ? false : true) : false' ), false );
+      t.is ( ck.eval ( 'true || false' ), true );
+      t.is ( ck.eval ( 'false || false' ), false );
+      t.is ( ck.eval ( 'false || (true?123:0)' ), true );
+      t.is ( ck.eval ( 'true && false' ), false );
+      t.is ( ck.eval ( 'false && false' ), false );
+      t.is ( ck.eval ( 'true && true' ), true );
+      t.is ( ck.eval ( '123 === 123' ), true );
+      t.is ( ck.eval ( '123 === 0' ), false );
+      t.is ( ck.eval ( '123 == 123' ), true );
+      t.is ( ck.eval ( '123 == 0' ), false );
+      t.is ( ck.eval ( '123 !== 123' ), false );
+      t.is ( ck.eval ( '123 !== 0' ), true );
+      t.is ( ck.eval ( '123 != 123' ), false );
+      t.is ( ck.eval ( '123 != 0' ), true );
+      t.is ( ck.eval ( '123 > 123' ), false );
+      t.is ( ck.eval ( '123 >= 123' ), true );
+      t.is ( ck.eval ( '123 < 123' ), false );
+      t.is ( ck.eval ( '123 <= 123' ), true );
+      t.is ( ck.eval ( 'asd = true' ), false );
+      t.is ( ck.eval ( '0 + 0' ), false );
+      t.is ( ck.eval ( '0 + 1' ), true );
+      t.is ( ck.eval ( '0 += 1' ), false );
+      t.is ( ck.eval ( '0 - 0' ), false );
+      t.is ( ck.eval ( '0 - 1' ), true );
+      t.is ( ck.eval ( '0 -= 1' ), false );
+      t.is ( ck.eval ( '2 * 0' ), false );
+      t.is ( ck.eval ( '2 * 1' ), true );
+      t.is ( ck.eval ( '2 / 1' ), true );
+      t.is ( ck.eval ( '0 / 1' ), false );
+      t.is ( ck.eval ( '2 / 0' ), true );
+      t.is ( ck.eval ( '0 / 0' ), false );
+      t.is ( ck.eval ( '2 % 0' ), false );
+      t.is ( ck.eval ( '2 % 1' ), false );
+      t.is ( ck.eval ( '2 % 2' ), false );
+      t.is ( ck.eval ( '2 % 3' ), true );
+      t.is ( ck.eval ( '+0' ), false );
+      t.is ( ck.eval ( '+1' ), true );
+      t.is ( ck.eval ( '+=1' ), false );
+      t.is ( ck.eval ( '-0' ), false );
+      t.is ( ck.eval ( '-1' ), true );
+      t.is ( ck.eval ( '-=1' ), false );
+      t.is ( ck.eval ( '!0' ), true );
+      t.is ( ck.eval ( '!1' ), false );
+      t.is ( ck.eval ( '(true)' ), true );
+      t.is ( ck.eval ( '(false)' ), false );
+      t.is ( ck.eval ( '!(true)' ), false );
+      t.is ( ck.eval ( '!(false)' ), true );
+      t.is ( ck.eval ( 'true \n true' ), false );
+      t.is ( ck.eval ( 'true;' ), false );
 
     });
 

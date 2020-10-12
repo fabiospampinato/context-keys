@@ -3,278 +3,215 @@
 
 //URL: https://github.com/pegjs/pegjs/blob/master/examples/javascript.pegjs
 
+/* START */
+
 Start
-  = __ Statements __ { return true; }
+  = _ Expression _ !Source { return true }
 
-SourceCharacter
-  = .
+/* HELPERS */
 
-WhiteSpace
-  = "\t"
-  / "\v"
-  / "\f"
-  / " "
-  / "\u00A0"
-  / "\uFEFF"
-  / [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000] // Zs
+Dot
+  = "."
 
-LineTerminator
+Newline
   = [\n\r\u2028\u2029]
 
-LineTerminatorSequence
-  = "\n"
-  / "\r\n"
-  / "\r"
-  / "\u2028"
-  / "\u2029"
+NewlineSequence
+  = "\r\n"
+  / Newline
+
+Source
+  = .
+
+_
+  = [ \t\v\f\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]*
+
+/* IDENTIFIER */
 
 Identifier
-  = !ReservedWord IdentifierName
-
-IdentifierName
-  = IdentifierStart IdentifierPart*
+  = IdentifierStart IdentifierRest*
 
 IdentifierStart
-  = ASCIILetter
-  / "$"
-  / "_"
+  = [a-zA-Z$_]
 
-IdentifierPart
+IdentifierRest
   = IdentifierStart
   / DecimalDigit
 
-ASCIILetter
- = [a-zA-Z]
-
-ReservedWord
-  = Keyword
-  / NullLiteral
-  / BooleanLiteral
-
-Keyword
-  = ("break" / "case" / "catch" / "class" / "const" / "continue" / "debugger" / "default" / "delete" / "do" / "else" / "enum" / "export" / "extends" / "finally" / "for" / "function" / "if" / "implements" / "import" / "in" / "instanceof" / "interface" / "let" / "new" / "package" / "private" / "protected" / "public" / "return" / "static" / "super" / "switch" / "this" / "throw" / "try" / "typeof" / "var" / "void" / "while" / "with" / "yield") !IdentifierPart
+/* LITERAL */
 
 Literal
   = NullLiteral
   / BooleanLiteral
-  / NumericLiteral
+  / DecimalLiteral
   / StringLiteral
 
+/* NULL LITERAL */
+
+NullIdentifier
+  = "null"
+
 NullLiteral
-  = "null" !IdentifierPart
+  = NullIdentifier !IdentifierRest
+
+/* BOOLEAN LITERAL */
+
+BooleanIdentifier
+  = "true"
+  / "false"
 
 BooleanLiteral
-  = "true" !IdentifierPart
-  / "false" !IdentifierPart
+  = BooleanIdentifier !IdentifierRest
 
-NumericLiteral
-  = HexIntegerLiteral !(IdentifierStart / DecimalDigit)
-  / DecimalLiteral !(IdentifierStart / DecimalDigit)
+/* DECIMAL LITERAL */
 
 DecimalLiteral
-  = DecimalIntegerLiteral "." DecimalDigit* ExponentPart?
-  / "." DecimalDigit+ ExponentPart?
-  / DecimalIntegerLiteral ExponentPart?
+  = DecimalIntegerLiteral (Dot DecimalDigit*)? DecimalExponent? !IdentifierStart
+  / Dot DecimalDigit+ DecimalExponent? !IdentifierStart
 
 DecimalIntegerLiteral
   = "0"
-  / NonZeroDigit DecimalDigit*
+  / [1-9] DecimalDigit*
 
 DecimalDigit
   = [0-9]
 
-NonZeroDigit
-  = [1-9]
+DecimalExponent
+  = "e"i [+-]? DecimalDigit+
 
-ExponentPart
-  = ExponentIndicator SignedInteger
-
-ExponentIndicator
-  = "e"i
-
-SignedInteger
-  = [+-]? DecimalDigit+
-
-HexIntegerLiteral
-  = "0x"i $HexDigit+
-
-HexDigit
-  = [0-9a-f]i
+/* STRING LITERAL */
 
 StringLiteral
-  = '`' BacktickStringCharacter* '`'
-  / '"' DoubleStringCharacter* '"'
-  / "'" SingleStringCharacter* "'"
+  = StringSingleDelimiter StringSingleCharacter* StringSingleDelimiter
+  / StringDoubleDelimiter StringDoubleCharacter* StringDoubleDelimiter
+  / StringBacktickDelimiter StringBacktickCharacter* StringBacktickDelimiter
 
-BacktickStringCharacter
-  = !('`' / "\\" / LineTerminator) SourceCharacter
-  / StringSpecialCharacter
-
-DoubleStringCharacter
-  = !('"' / "\\" / LineTerminator) SourceCharacter
-  / StringSpecialCharacter
-
-SingleStringCharacter
-  = !("'" / "\\" / LineTerminator) SourceCharacter
-  / StringSpecialCharacter
-
-StringSpecialCharacter
-  = "\\" EscapeSequence
-  / LineContinuation
-
-LineContinuation
-  = "\\" LineTerminatorSequence
-
-EscapeSequence
-  = CharacterEscapeSequence
-  / "0" !DecimalDigit
-  / HexEscapeSequence
-  / UnicodeEscapeSequence
-
-CharacterEscapeSequence
-  = SingleEscapeCharacter
-  / NonEscapeCharacter
-
-SingleEscapeCharacter
+StringSingleDelimiter
   = "'"
-  / '"'
-  / "`"
-  / "\\"
-  / "b"
-  / "f"
-  / "n"
-  / "r"
-  / "t"
-  / "v"
 
-NonEscapeCharacter
-  = !(EscapeCharacter / LineTerminator) SourceCharacter
+StringSingleCharacter
+  = !(StringSingleDelimiter / StringEscapeOperator / Newline) Source
+  / StringEscapedCharacter
 
-EscapeCharacter
-  = SingleEscapeCharacter
-  / DecimalDigit
-  / "x"
-  / "u"
+StringDoubleDelimiter
+  = '"'
 
-HexEscapeSequence
-  = "x" $(HexDigit HexDigit)
+StringDoubleCharacter
+  = !(StringDoubleDelimiter / StringEscapeOperator / Newline) Source
+  / StringEscapedCharacter
 
-UnicodeEscapeSequence
-  = "u" $(HexDigit HexDigit HexDigit HexDigit)
+StringBacktickDelimiter
+  = "`"
 
-__
-  = (WhiteSpace / LineTerminatorSequence)*
+StringBacktickCharacter
+  = !(StringBacktickDelimiter / StringEscapeOperator / Newline) Source
+  / StringEscapedCharacter
 
-_
-  = WhiteSpace*
+StringEscapeOperator
+  = "\\"
 
-EOS
-  = __ ";"
-  / _ LineTerminatorSequence
-  / _ &"}"
-  / __ EOF
+StringEscapedCharacter
+  = StringEscapeOperator (NewlineSequence / Source)
 
-EOF
-  = !.
+/* EXPRESSION */
 
-PrimaryExpression
-  = Identifier
-  / Literal
-  / "(" __ Expression __ ")"
+Expression
+  = TernaryExpression
+  / LogicalORExpression
 
-MemberExpression
-  = PrimaryExpression (__ "[" __ Expression __ "]"  / __ "." __ IdentifierName)*
+/* TERNARY EXPRESSION */
 
-UnaryExpression
-  = MemberExpression
-  / UnaryOperator __ UnaryExpression
+TernaryOperatorTrue
+  = "?"
 
-UnaryOperator
-  = $("+" !"=")
-  / $("-" !"=")
-  / "~"
-  / "!"
+TernaryOperatorFalse
+  = ":"
 
-MultiplicativeExpression
-  = UnaryExpression (__ MultiplicativeOperator __ UnaryExpression)*
+TernaryExpression
+  = LogicalORExpression _ TernaryOperatorTrue _ Expression _ TernaryOperatorFalse _ Expression
 
-MultiplicativeOperator
-  = $("*" !"=")
-  / $("/" !"=")
-  / $("%" !"=")
-
-AdditiveExpression
-  = MultiplicativeExpression (__ AdditiveOperator __ MultiplicativeExpression)*
-
-AdditiveOperator
-  = $("+" ![+=])
-  / $("-" ![-=])
-
-ShiftExpression
-  = AdditiveExpression (__ ShiftOperator __ AdditiveExpression)*
-
-ShiftOperator
-  = $("<<"  !"=")
-  / $(">>>" !"=")
-  / $(">>"  !"=")
-
-RelationalExpression
-  = ShiftExpression (__ RelationalOperator __ ShiftExpression)*
-
-RelationalOperator
-  = "<="
-  / ">="
-  / $("<" !"<")
-  / $(">" !">")
-
-EqualityExpression
-  = RelationalExpression (__ EqualityOperator __ RelationalExpression)*
-
-EqualityOperator
-  = "==="
-  / "!=="
-  / "=="
-  / "!="
-
-BitwiseANDExpression
-  = EqualityExpression (__ BitwiseANDOperator __ EqualityExpression)*
-
-BitwiseANDOperator
-  = $("&" ![&=])
-
-BitwiseXORExpression
-  = BitwiseANDExpression (__ BitwiseXOROperator __ BitwiseANDExpression)*
-
-BitwiseXOROperator
-  = $("^" !"=")
-
-BitwiseORExpression
-  = BitwiseXORExpression (__ BitwiseOROperator __ BitwiseXORExpression)*
-
-BitwiseOROperator
-  = $("|" ![|=])
-
-LogicalANDExpression
-  = BitwiseORExpression (__ LogicalANDOperator __ BitwiseORExpression)*
-
-LogicalANDOperator
-  = "&&"
-
-LogicalORExpression
-  = LogicalANDExpression (__ LogicalOROperator __ LogicalANDExpression)*
+/* LOGICAL OR EXPRESSION */
 
 LogicalOROperator
   = "||"
 
-ConditionalExpression
-  = LogicalORExpression __ "?" __ ConditionalExpression __ ":" __ ConditionalExpression
-  / LogicalORExpression
+LogicalORExpression
+  = LogicalANDExpression (_ LogicalOROperator _ LogicalANDExpression)*
 
-Expression
-  = ConditionalExpression (__ "," __ ConditionalExpression)*
+/* LOGICAL AND EXPRESSION */
 
-Statement
-  = Expression EOS
+LogicalANDOperator
+  = "&&"
 
-Statements
-  = (Statement (__ Statement)*)?
+LogicalANDExpression
+  = EqualityExpression (_ LogicalANDOperator _ EqualityExpression)*
+
+/* EQUALITY EXPRESSION */
+
+EqualityOperator
+  = ("==" / "!=") "="?
+
+EqualityExpression
+  = RelationalExpression (_ EqualityOperator _ RelationalExpression)*
+
+/* RELATIONAL EXPRESSION */
+
+RelationalOperator
+  = ("<" / ">") "="?
+
+RelationalExpression
+  = AdditiveExpression (_ RelationalOperator _ AdditiveExpression)*
+
+/* ADDITIVE EXPRESSION */
+
+AdditiveOperator
+  = ("+" / "-") ![-+=]
+
+AdditiveExpression
+  = MultiplicativeExpression (_ AdditiveOperator _ MultiplicativeExpression)*
+
+/* MULTIPLICATIVE EXPRESSION */
+
+MultiplicativeOperator
+  = ("*" / "/" / "%") !"="
+
+MultiplicativeExpression
+  = UnaryExpression (_ MultiplicativeOperator _ UnaryExpression)*
+
+/* UNARY EXPRESSION */
+
+UnaryOperator
+  = ("+" / "-" / "!") !"="
+
+UnaryExpression
+  = MemberExpression
+  / UnaryOperator _ UnaryExpression
+
+/* MEMER EXPRESSION */
+
+MemberOperatorStart
+  = "["
+
+MemberOperatorEnd
+  = "]"
+
+MemberExpression
+  = PrimaryExpression (_ MemberOperatorStart _ Expression _ MemberOperatorEnd  / _ Dot _ Identifier)*
+
+/* GROUP EXPRESSION */
+
+GroupOperatorStart
+  = "("
+
+GroupOperatorEnd
+  = ")"
+
+GroupExpression
+  = GroupOperatorStart _ Expression _ GroupOperatorEnd
+
+/* PRIMARY EXPRESSION */
+
+PrimaryExpression
+  = Identifier
+  / Literal
+  / GroupExpression

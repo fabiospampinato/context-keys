@@ -23,9 +23,7 @@ Expressions are written in a subset of JavaScript where only the following featu
 - **Ternary operator**: `? :`.
 - **Additive operators**: `+`, `-`.
 - **Multiplicative operators**: `*`, `/`, `%`.
-- **Bitwise operators**: `|`, `^`, `&`.
-- **Shift operators**: `<<`, `>>>`, `>>`.
-- **Unary operators**: `+`, `-`, `~`, `!`.
+- **Unary operators**: `+`, `-`, `!`.
 - **Property access**: `[]`, `.`.
 - **Parentheses groups**: `(`, `)`.
 - **Variables**: all your context keys will be accessible as if they were regular variables, but you can't define new ones in an expression.
