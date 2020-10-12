@@ -25,7 +25,15 @@ const Expression = {
 
   parseSimpleKey: ( expression: Expr, has: Function ): ExprData | undefined => {
 
-    if ( has ( expression ) ) {
+    if ( Expression.reservedRe.test ( expression ) ) {
+
+      return {
+        expression,
+        keys: [expression],
+        fn: function () { return expression === 'true'; }
+      };
+
+    } else if ( has ( expression ) ) {
 
       return {
         expression,
@@ -41,7 +49,7 @@ const Expression = {
 
       const [, bangsRaw, key, properties] = match,
             bangs = ( !bangsRaw || bangsRaw.length % 2 === 0 ) ? '!!' : '!',
-            expressionWrapped = `${bangs}this('${key}')${properties || ''}`,
+            expressionWrapped = Expression.reservedRe.test ( key ) ? `${bangsRaw}${key === 'true' ? 'true' : 'false'}${properties || ''}` : `${bangs}this('${key}')${properties || ''}`,
             fn = new Function ( `return ${expressionWrapped}` ) as ExprFN; //TSC
 
       return {
@@ -84,7 +92,7 @@ const Expression = {
 
       if ( Expression.reservedRe.test ( key ) ) {
 
-        expressionsWrapped.push ( `${key}${properties}` );
+        expressionsWrapped.push ( `${bangsRaw}${key === 'true' ? 'true' : 'false'}${properties}` );
 
       } else {
 
@@ -116,7 +124,7 @@ const Expression = {
           keys: Key[] = [];
 
     const expressionWrapped = expression.replace ( Expression.identifierRe, ( match, $1, $2, $3 ) => {
-      if ( Expression.reservedRe.test ( $2 ) ) return match;
+      if ( Expression.reservedRe.test ( $2 ) ) return `${$1}${$2 === 'true' ? 'true' : 'false'}${$3}`;
       if ( !keysObj[$2] ) keys[keys.length] = keysObj[$2] = $2;
       return `${$1}this('${$2}')${$3}`;
     });
