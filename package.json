@@ -1,7 +1,7 @@
 {
   "name": "context-keys",
   "description": "Performant and feature rich library for managing context keys.",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
