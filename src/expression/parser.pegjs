@@ -187,7 +187,7 @@ UnaryExpression
   = MemberExpression
   / UnaryOperator _ UnaryExpression
 
-/* MEMER EXPRESSION */
+/* MEMBER EXPRESSION */
 
 MemberOperatorStart
   = "["
