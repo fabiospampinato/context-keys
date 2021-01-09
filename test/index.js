@@ -3,25 +3,23 @@
 
 import {describe} from 'ava-spec';
 import delay from 'promise-resolve-timeout';
-import Parser from '../src/expression/parser.js';
 import ContextKeys from '../dist';
+import Expression from '../dist/expression';
 import Fixtures from './fixtures';
 
 /* PARSER */
 
 describe ( 'Parser', it => {
 
-  it ( 'Parses all the supported syntax', t => {
+  it ( 'Accepts all the supported syntax', t => {
 
-    const expression = `null || true && false || 123 || -0.123e10 || 123 !== NaN || 123 !== undefined || 'str' || "str" || \`str\` || '\\n\\\\' || ( true ? 123 : false ) || 123 === 123 || 123 !== 123 || 123 == 123 || 123 != 123 || 123 <= 123 || 123 >= 123 || 123 < 123 || 123 > 123 || 123 + 123 || 123 - 123 || 123 * 123 || 123 / 123 || 123 % 123 || +123 || -123 || !123 || !( false || !( true ) ) || foo || foo123 || FoO || !foo || foo[0]['str'] || foo.bar.baz`;
+    const expression = `null || true && false || 123 || 123 !== NaN || 123 !== undefined || 'str' || "str" || \`str\` || '\\n\\\\' || ( true ? 123 : false ) || 123 === 123 || 123 !== 123 || 123 == 123 || 123 != 123 || 123 <= 123 || 123 >= 123 || 123 < 123 || 123 > 123 || 123 + 123 || 123 - 123 || 123 * 123 || 123 / 123 || 123 % 123 || +123 || -123 || !123 || !( false || !( true ) ) || foo || foo123 || FoO || !foo || foo[0]['str'] || foo.bar.baz`;
 
-    Parser.parse ( expression );
-
-    t.pass ();
+    t.true ( Expression.check ( expression ) );
 
   });
 
-  it ( 'Throws with all unsupported syntax', t => {
+  it ( 'Rejects all the unsupported syntax', t => {
 
     const expressions = [
       '0xff',
@@ -44,7 +42,7 @@ describe ( 'Parser', it => {
 
       const expression = expressions[i];
 
-      t.throws ( () => Parser.parse ( expression ) );
+      t.false ( Expression.check ( expression ) );
 
     }
 
@@ -231,7 +229,7 @@ describe ( 'Context Keys', it => {
 
     it ( 'can evaluate an expression that doesn\'t use any variables', t => {
 
-      const ck = new ContextKeys ();
+      const ck = new ContextKeys ( Fixtures.keys );
 
       t.is ( ck.eval ( '    ' ), false );
       t.is ( ck.eval ( 'yield' ), false );
@@ -261,21 +259,8 @@ describe ( 'Context Keys', it => {
       t.is ( ck.eval ( '"str"' ), true );
       t.is ( ck.eval ( '!"str"' ), false );
       t.is ( ck.eval ( '123' ), true );
-      t.is ( ck.eval ( '123e10' ), true );
-      t.is ( ck.eval ( '123e+10' ), true );
-      t.is ( ck.eval ( '123e-10' ), true );
-      t.is ( ck.eval ( '123E10' ), true );
-      t.is ( ck.eval ( '123E+10' ), true );
-      t.is ( ck.eval ( '123E-10' ), true );
       t.is ( ck.eval ( '0.0' ), false );
       t.is ( ck.eval ( '0.123' ), true );
-      t.is ( ck.eval ( '0.123e' ), false );
-      t.is ( ck.eval ( '0.123e10' ), true );
-      t.is ( ck.eval ( '0.123e+10' ), true );
-      t.is ( ck.eval ( '0.123e-10' ), true );
-      t.is ( ck.eval ( '0.123E10' ), true );
-      t.is ( ck.eval ( '0.123E+10' ), true );
-      t.is ( ck.eval ( '0.123E-10' ), true );
       t.is ( ck.eval ( '.0' ), false );
       t.is ( ck.eval ( '.123' ), true );
       t.is ( ck.eval ( '0x' ), false );
@@ -346,6 +331,10 @@ describe ( 'Context Keys', it => {
       t.is ( ck.eval ( '!(false)' ), true );
       t.is ( ck.eval ( 'true \n true' ), false );
       t.is ( ck.eval ( 'true;' ), false );
+      t.is ( ck.eval ( 'number++' ), false );
+      t.is ( ck.eval ( 'number--' ), false );
+      t.is ( ck.eval ( '++number' ), false );
+      t.is ( ck.eval ( '--number' ), false );
 
     });
 

@@ -13,6 +13,14 @@ const Expression = {
   expressionSimpleBooleanRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*(&&|\|\|)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)(?:\s*(\4)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*))*\s*$/, // Repeated capturing groups aren't actually supported, so we have to further parse strings matches by this regex unfortunately
   reservedRe: /^(null|true|false|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|new|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)$/,
 
+  parseEmpty: ( expression: Expr ): ExprData | undefined => {
+
+    if ( expression.trim ().length ) return;
+
+    return Expression.parseFallback ( expression );
+
+  },
+
   parseFallback: ( expression: Expr ): ExprData => {
 
     return {
@@ -20,6 +28,14 @@ const Expression = {
       keys: [],
       fn: () => false
     };
+
+  },
+
+  parseInvalid: ( expression: Expr ): ExprData => {
+
+    console.error ( `[context-keys] The following expression is invalid: "${expression}"` );
+
+    return Expression.parseFallback ( expression );
 
   },
 
@@ -114,11 +130,9 @@ const Expression = {
 
   },
 
-  parseAdvanced: ( expression: Expr ): ExprData => {
+  parseAdvanced: ( expression: Expr ): ExprData | undefined => {
 
-    const Parser = require ( '../../src/expression/parser.js' ); //UGLY
-
-    Parser.parse ( expression ); // Checking for validity
+    if ( !Expression.check ( expression ) ) return;
 
     const keysObj: Record<string, string> = {},
           keys: Key[] = [];
@@ -139,13 +153,11 @@ const Expression = {
 
     try {
 
-      return Expression.parseSimpleKey ( expression, has ) || Expression.parseSimpleBoolean ( expression ) || Expression.parseAdvanced ( expression );
+      return Expression.parseEmpty ( expression ) || Expression.parseSimpleKey ( expression, has ) || Expression.parseSimpleBoolean ( expression ) || Expression.parseAdvanced ( expression ) || Expression.parseInvalid ( expression );
 
-    } catch ( err ) {
+    } catch {
 
-      console.error ( `[context-keys] The following expression is invalid: "${expression}"` );
-
-      return Expression.parseFallback ( expression );
+      return Expression.parseInvalid ( expression );
 
     }
 
@@ -162,6 +174,24 @@ const Expression = {
     } catch ( err ) {
 
       console.error ( `[context-keys] An error occurred while evaluating the following expression: "${data.expression}"` );
+
+      return false;
+
+    }
+
+  },
+
+  check: ( expression: Expr ): boolean => {
+
+    try {
+
+      const parser = require ( '../../dist/expression/parser' ).default;
+
+      return !!parser ( expression );
+
+    } catch {
+
+      console.error ( `[context-keys] Parser error for expression: "${expression}"` );
 
       return false;
 
