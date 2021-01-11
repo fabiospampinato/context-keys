@@ -25,7 +25,7 @@ const Source
   = /./;
 
 const _
-  = $`${/[ \t]/}*`;
+  = $`${/[ \t]*/}`;
 
 /* IDENTIFIER */
 
@@ -74,7 +74,7 @@ const StringEscapeOperator
   = '\\';
 
 const StringEscapedCharacter
-  = $`${StringEscapeOperator} :(${CRLF} | ${Source})`;
+  = $`${StringEscapeOperator} :(${CRLF} | ${Newline} | ${Source})`;
 
 const StringAbstractLiteral
   = Delimiter => $`${Delimiter} :(:(!(${Delimiter} | ${StringEscapeOperator} | ${Newline}) ${Source}) | ${StringEscapedCharacter})* ${Delimiter}`;
@@ -227,7 +227,7 @@ const TernaryExpression
 /* ROOT */
 
 const Root
-  = $`${Expression}? !${Source}`;
+  = $`${Expression}? ${_} !${Source}`;
 
 /* EXPORT */
 

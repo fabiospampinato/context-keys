@@ -41,7 +41,7 @@
     "context-keys"
   ],
   "dependencies": {
-    "reghex": "^3.0.0-beta.0"
+    "reghex": "^3.0.0-beta.1"
   },
   "devDependencies": {
     "@types/node": "^13.7.1",
