@@ -16,7 +16,6 @@ class ContextKeys {
   private scheduledKeys: Set<Key>;
   private scheduledId?: number;
   private getBound: Function = this.get.bind ( this );
-  private hasBound: Function = this.has.bind ( this );
 
   constructor ( keys?: Keys ) {
 
@@ -171,7 +170,7 @@ class ContextKeys {
 
   eval ( expression: Expr ): boolean {
 
-    return Expression.eval ( expression, this.hasBound, this.getBound );
+    return Expression.eval ( expression, this.getBound );
 
   }
 
@@ -250,9 +249,9 @@ class ContextKeys {
 
       handler = handler as ChangeHandler; //TSC
 
-      const exprData = Expression.parse ( expression, this.hasBound ),
+      const exprData = Expression.parse ( expression ),
             {keys} = exprData,
-            value = Expression.eval ( exprData, this.hasBound, this.getBound ),
+            value = Expression.eval ( exprData, this.getBound ),
             data: ChangeHandlerData = { handler, value },
             {handlers, handlersTree} = this;
 

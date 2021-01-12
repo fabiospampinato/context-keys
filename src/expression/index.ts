@@ -1,25 +1,13 @@
 
 /* IMPORT */
 
-import {Key, Expr, ExprFN, ExprData} from '../types';
+import {Expr, ExprFN, ExprData} from '../types';
 import Utils from '../utils';
+import parser from './parser';
 
 /* EXPRESSION */
 
 const Expression = {
-
-  identifierRe: /(^|[\s(|&?:^=<>+*/%~!-])([a-zA-Z_\$][a-zA-Z_0-9]*)([\s)|&?:^=<>+*/%~!.-]|$)/g,
-  expressionSimpleKeyRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*$/,
-  expressionSimpleBooleanRe: /^\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)\s*(&&|\|\|)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*)(?:\s*(\4)\s*(!*)([a-zA-Z_\$][a-zA-Z_0-9]*)((?:\.[a-zA-Z_\$][a-zA-Z_0-9]*)*))*\s*$/, // Repeated capturing groups aren't actually supported, so we have to further parse strings matches by this regex unfortunately
-  reservedRe: /^(null|true|false|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|function|if|implements|import|in|instanceof|interface|let|new|package|private|protected|public|return|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)$/,
-
-  parseEmpty: ( expression: Expr ): ExprData | undefined => {
-
-    if ( expression.trim ().length ) return;
-
-    return Expression.parseFallback ( expression );
-
-  },
 
   parseFallback: ( expression: Expr ): ExprData => {
 
@@ -39,121 +27,23 @@ const Expression = {
 
   },
 
-  parseSimpleKey: ( expression: Expr, has: Function ): ExprData | undefined => {
-
-    if ( Expression.reservedRe.test ( expression ) ) {
-
-      return {
-        expression,
-        keys: [expression],
-        fn: function () { return expression === 'true'; }
-      };
-
-    } else if ( has ( expression ) ) {
-
-      return {
-        expression,
-        keys: [expression],
-        fn: function () { return !!this ( expression ); }
-      };
-
-    } else {
-
-      const match = Expression.expressionSimpleKeyRe.exec ( expression );
-
-      if ( !match ) return;
-
-      const [, bangsRaw, key, properties] = match,
-            bangs = ( !bangsRaw || bangsRaw.length % 2 === 0 ) ? '!!' : '!',
-            expressionWrapped = Expression.reservedRe.test ( key ) ? `${bangsRaw}${key === 'true' ? 'true' : 'false'}${properties || ''}` : `${bangs}this('${key}')${properties || ''}`,
-            fn = new Function ( `return ${expressionWrapped}` ) as ExprFN; //TSC
-
-      return {
-        expression,
-        keys: [key],
-        fn
-      };
-
-    }
-
-  },
-
-  parseSimpleBoolean: ( expression: Expr ): ExprData | undefined => {
-
-    const match = Expression.expressionSimpleBooleanRe.exec ( expression );
-
-    if ( !match ) return;
-
-    const operator = match[4],
-          expressionParts = expression.split ( operator ),
-          matches: RegExpExecArray[] = [];
-
-    for ( let i = 0, l = expressionParts.length; i < l; i++ ) {
-
-      const match = Expression.expressionSimpleKeyRe.exec ( expressionParts[i] );
-
-      if ( !match ) return;
-
-      matches.push ( match );
-
-    }
-
-    const expressionsWrapped: string[] = [],
-          keysObj: Record<string, string> = {},
-          keys: Key[] = [];
-
-    for ( let i = 0, l = matches.length; i < l; i++ ) {
-
-      const [, bangsRaw, key, properties] = matches[i];
-
-      if ( Expression.reservedRe.test ( key ) ) {
-
-        expressionsWrapped.push ( `${bangsRaw}${key === 'true' ? 'true' : 'false'}${properties}` );
-
-      } else {
-
-        const bangs = ( !bangsRaw || bangsRaw.length % 2 === 0 ) ? '!!' : '!';
-
-        expressionsWrapped.push ( `${bangs}this('${key}')${properties || ''}` );
-
-        if ( !keysObj[key] ) keys[keys.length] = keysObj[key] = key;
-
-      }
-
-    }
-
-    const expressionWrapped = expressionsWrapped.join ( operator );
-
-    const fn = new Function ( `return ${expressionWrapped}` ) as ExprFN; //TSC
-
-    return {expression, keys, fn};
-
-  },
-
   parseAdvanced: ( expression: Expr ): ExprData | undefined => {
 
-    if ( !Expression.check ( expression ) ) return;
+    const [wrapped, keys] = parser ( expression );
 
-    const keysObj: Record<string, string> = {},
-          keys: Key[] = [];
+    if ( !wrapped ) return;
 
-    const expressionWrapped = expression.replace ( Expression.identifierRe, ( match, $1, $2, $3 ) => {
-      if ( Expression.reservedRe.test ( $2 ) ) return `${$1}${$2 === 'true' ? 'true' : 'false'}${$3}`;
-      if ( !keysObj[$2] ) keys[keys.length] = keysObj[$2] = $2;
-      return `${$1}this('${$2}')${$3}`;
-    });
+    const fn = new Function ( `return !!(${wrapped})`) as ExprFN;
 
-    const fn = new Function ( `return !!(${expressionWrapped})` ) as ExprFN; //TSC
-
-    return {expression, keys, fn};
+    return { expression, keys, fn };
 
   },
 
-  parse: Utils.memoize ( ( expression: Expr, has: Function ): ExprData => {
+  parse: Utils.memoize ( ( expression: Expr ): ExprData => {
 
     try {
 
-      return Expression.parseEmpty ( expression ) || Expression.parseSimpleKey ( expression, has ) || Expression.parseSimpleBoolean ( expression ) || Expression.parseAdvanced ( expression ) || Expression.parseInvalid ( expression );
+      return Expression.parseAdvanced ( expression ) || Expression.parseInvalid ( expression );
 
     } catch {
 
@@ -163,9 +53,9 @@ const Expression = {
 
   }),
 
-  eval ( expression: Expr | ExprData, has: Function, get: Function ): boolean {
+  eval ( expression: Expr | ExprData, get: Function ): boolean {
 
-    const data = Utils.isString ( expression ) ? Expression.parse ( expression, has ) : expression;
+    const data = Utils.isString ( expression ) ? Expression.parse ( expression ) : expression;
 
     try {
 
@@ -183,19 +73,7 @@ const Expression = {
 
   check: ( expression: Expr ): boolean => {
 
-    try {
-
-      const parser = require ( '../../dist/expression/parser' ).default;
-
-      return !!parser ( expression );
-
-    } catch {
-
-      console.error ( `[context-keys] Parser error for expression: "${expression}"` );
-
-      return false;
-
-    }
+    return !!parser ( expression )[0];
 
   }
 

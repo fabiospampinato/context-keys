@@ -2,239 +2,43 @@
 /* IMPORT */
 
 import {match, parse} from 'reghex';
-import Utils from '../utils';
+import {Expr, Key} from '../types';
+import grammar from './grammar';
 
-/* PARSER HELPERS */
+/* HELPERS */
 
-const $ = match ( '' );
+const Keys = {
+  found: new Set<string> (),
+  reserved: new Set ([ 'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'enum', 'export', 'extends', 'finally', 'for', 'function', 'if', 'implements', 'import', 'in', 'instanceof', 'interface', 'let', 'new', 'package', 'private', 'protected', 'public', 'return', 'static', 'super', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield' ])
+};
 
-/* GRAMMAR HELPERS */
+const Matchers = {
+  Pass: match ( '', token => {
+    return token.join ( '' );
+  }),
+  Key: match ( '', token => {
+    const key = token[0];
+    if ( Keys.reserved.has ( key ) ) return '(false)';
+    Keys.found.add ( key );
+    return `this('${key}')`;
+  })
+};
 
-const CRLF
-  = '\r\n';
+const Wrapper = parse ( grammar ( Matchers.Pass, Matchers.Key ) );
 
-const Digit
-  = /\d/;
+/* PARSER */
 
-const Dot
-  = '.';
+const parser = ( expression: Expr ): [Expr | undefined, Key[]] => {
 
-const Newline
-  = /[\n\r]/;
+  Keys.found.clear ();
 
-const Source
-  = /./;
+  const wrapped = Wrapper ( expression ),
+        keys = Array.from ( Keys.found );
 
-const _
-  = /[ \t]*/;
+  return [wrapped, keys];
 
-/* IDENTIFIER */
-
-const IdentifierStart
-  = /[a-zA-Z$_]/;
-
-const IdentifierRest
-  = /[a-zA-Z0-9$_]/;
-
-const Identifier
-  = /[a-zA-Z$_][a-zA-Z0-9$_]*/;
-
-/* NULL LITERAL */
-
-const NullIdentifier
-  = 'null';
-
-const NullLiteral
-  = $`${NullIdentifier} !${IdentifierRest}`;
-
-/* BOOLEAN LITERAL */
-
-const BooleanIdentifier
-  = /true|false/;
-
-const BooleanLiteral
-  = $`${BooleanIdentifier} !${IdentifierRest}`;
-
-/* DECIMAL LITERAL */
-
-const DecimalInteger
-  = /0|[1-9]\d*/;
-
-const DecimalFullLiteral
-  = $`${DecimalInteger} :(${Dot} ${Digit}*)? !${IdentifierStart}`;
-
-const DecimalShortLiteral
-  = $`${Dot} ${Digit}+ !${IdentifierStart}`;
-
-const DecimalLiteral
-  = $`${DecimalFullLiteral} | ${DecimalShortLiteral}`;
-
-/* STRING LITERAL */
-
-const StringEscapeOperator
-  = '\\';
-
-const StringEscapedCharacter
-  = $`${StringEscapeOperator} :(${CRLF} | ${Newline} | ${Source})`;
-
-const StringAbstractLiteral
-  = Delimiter => $`${Delimiter} :(:(!(${Delimiter} | ${StringEscapeOperator} | ${Newline}) ${Source}) | ${StringEscapedCharacter})* ${Delimiter}`;
-
-const StringSingleDelimiter
-  = "'";
-
-const StringSingleLiteral
-  = StringAbstractLiteral ( StringSingleDelimiter )
-
-const StringDoubleDelimiter
-  = '"';
-
-const StringDoubleLiteral
-  = StringAbstractLiteral ( StringDoubleDelimiter )
-
-const StringBacktickDelimiter
-  = '`';
-
-const StringBacktickLiteral
-  = StringAbstractLiteral ( StringBacktickDelimiter )
-
-const StringLiteral
-  = $`${StringSingleLiteral} | ${StringDoubleLiteral} | ${StringBacktickLiteral}`;
-
-/* LITERAL */
-
-const Literal
-  = $`${NullLiteral} | ${BooleanLiteral} | ${DecimalLiteral} | ${StringLiteral}`;
-
-/* EXPRESSION */
-
-const ExpressionRoot
-  = $`${() => LogicalTernaryExpression} | ${() => LogicalORExpression}`;
-
-const Expression
-  = $`${_} ${ExpressionRoot} ${_}`;
-
-/* GROUP EXPRESSION */
-
-const GroupOperatorStart
-  = '(';
-
-const GroupOperatorEnd
-  = ')';
-
-const GroupExpression
-  = $`${GroupOperatorStart} ${Expression} ${GroupOperatorEnd}`;
-
-/* PRIMARY EXPRESSION */
-
-const PrimaryExpression
-  = $`${GroupExpression} | ${Identifier} | ${Literal}`;
-
-/* MEMBER EXPRESSION */
-
-const MemberOperatorStart
-  = '[';
-
-const MemberOperatorEnd
-  = ']';
-
-const MemberBraketsProperty
-  = $`${MemberOperatorStart} ${Expression} ${MemberOperatorEnd}`;
-
-const MemberDotProperty
-  = $`${Dot} ${Identifier}`;
-
-const MemberProperty
-  = $`${MemberBraketsProperty} | ${MemberDotProperty}`;
-
-const MemberExpression
-  = $`${PrimaryExpression} ${MemberProperty}*`;
-
-/* UNARY EXPRESSION */
-
-const UnaryOperator
-  = /[-+]|!+/;
-
-const UnaryExpression
-  = $`${UnaryOperator}? ${_} ${MemberExpression}`;
-
-/* BINARY EXPRESSION */
-
-const BinaryAbstractExpression
-  = ( Operator, Expression ) => $`${Expression} :(${_} ${Operator} ${_} ${Expression})*`;
-
-/* MULTIPLICATIVE EXPRESSION */
-
-const MultiplicativeOperator
-  = /[*/%]/;
-
-const MultiplicativeExpression
-  = BinaryAbstractExpression ( MultiplicativeOperator, UnaryExpression );
-
-/* ADDITIVE EXPRESSION */
-
-const AdditiveOperator
-  = /[-+]/;
-
-const AdditiveExpression
-  = BinaryAbstractExpression ( AdditiveOperator, MultiplicativeExpression );
-
-/* RELATIONAL EXPRESSION */
-
-const RelationalOperator
-  = /[<>]=?/;
-
-const RelationalExpression
-  = BinaryAbstractExpression ( RelationalOperator, AdditiveExpression );
-
-/* EQUALITY EXPRESSION */
-
-const EqualityOperator
-  = /[!=]==?/;
-
-const EqualityExpression
-  = BinaryAbstractExpression ( EqualityOperator, RelationalExpression );
-
-/* LOGICAL AND EXPRESSION */
-
-const LogicalANDOperator
-  = '&&';
-
-const LogicalANDExpression
-  = BinaryAbstractExpression ( LogicalANDOperator, EqualityExpression );
-
-/* LOGICAL OR EXPRESSION */
-
-const LogicalOROperator
-  = '||';
-
-const LogicalORExpression
-  = BinaryAbstractExpression ( LogicalOROperator, LogicalANDExpression );
-
-/* TERNARY EXPRESSION */
-
-const TernaryAbstractExpressionGuard
-  = ( LOperator, ROperator ) => new RegExp ( `(?=.+?${Utils.escapeRegExp ( LOperator )}.+?${Utils.escapeRegExp ( ROperator )}.+?)` );
-
-const TernaryAbstractExpression
-  = ( LOperator, ROperator, LExpression, RExpression ) => $`${TernaryAbstractExpressionGuard ( LOperator, ROperator )} ${LExpression} ${_} ${LOperator} ${RExpression} ${ROperator} ${RExpression}`;
-
-/* LOGICAL TERNARY EXPRESSION */
-
-const LogicalTernaryOperatorTrue
-  = '?';
-
-const LogicalTernaryOperatorFalse
-  = ':';
-
-const LogicalTernaryExpression
-  = TernaryAbstractExpression ( LogicalTernaryOperatorTrue, LogicalTernaryOperatorFalse, LogicalORExpression, Expression );
-
-/* ROOT */
-
-const Root
-  = $`${Expression}? ${_} !${Source}`;
+};
 
 /* EXPORT */
 
-export default parse ( Root );
+export default parser;

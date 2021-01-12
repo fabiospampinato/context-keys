@@ -10,7 +10,7 @@ const {default: ContextKeys} = require ( '../dist' ),
 const noop = () => {};
 
 benchmark.defaultOptions = Object.assign ( benchmark.defaultOptions, {
-  iterations: 100000,
+  iterations: 10000,
   log: 'compact',
   beforeEach: ctx => {
     ctx.ck = new ContextKeys ();

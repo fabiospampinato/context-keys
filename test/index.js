@@ -22,6 +22,8 @@ describe ( 'Parser', it => {
   it ( 'Rejects all the unsupported syntax', t => {
 
     const expressions = [
+      ';',
+      '()',
       '0xff',
       '123 | 123',
       '123 ^ 123',

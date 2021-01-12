@@ -29,7 +29,9 @@ type ChangeHandlerData = {
 type ChangeHandlersTree = Record<Key, Record<Expr, ChangeHandlerData[]>>;
 
 type Disposer = () => void;
+type Matcher = ( quasis: TemplateStringsArray, ...re: (string | RegExp | (() => string | RegExp))[] ) => any;
+type Parser = ( src: string ) => string | undefined;
 
 /* EXPORT */
 
-export {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer};
+export {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer, Matcher, Parser};
