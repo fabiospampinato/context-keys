@@ -152,13 +152,10 @@ const MemberExpression
 /* UNARY EXPRESSION */
 
 const UnaryOperator
-  = /[-+!]/;
-
-const UnaryOperatorExpression
-  = $`${UnaryOperator} ${_} ${() => UnaryExpression}`;
+  = /[-+]|!+/;
 
 const UnaryExpression
-  = $`${MemberExpression} | ${UnaryOperatorExpression}`;
+  = $`${UnaryOperator}? ${_} ${MemberExpression}`;
 
 /* BINARY EXPRESSION */
 
