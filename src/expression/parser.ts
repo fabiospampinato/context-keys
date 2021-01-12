@@ -2,6 +2,7 @@
 /* IMPORT */
 
 import {match, parse} from 'reghex';
+import Utils from '../utils';
 
 /* PARSER HELPERS */
 
@@ -108,7 +109,7 @@ const Literal
 /* EXPRESSION */
 
 const ExpressionRoot
-  = $`${() => TernaryExpression} | ${() => LogicalORExpression}`;
+  = $`${() => LogicalTernaryExpression} | ${() => LogicalORExpression}`;
 
 const Expression
   = $`${_} ${ExpressionRoot} ${_}`;
@@ -127,7 +128,7 @@ const GroupExpression
 /* PRIMARY EXPRESSION */
 
 const PrimaryExpression
-  = $`${Literal} | ${Identifier} | ${GroupExpression}`;
+  = $`${GroupExpression} | ${Identifier} | ${Literal}`;
 
 /* MEMBER EXPRESSION */
 
@@ -212,14 +213,22 @@ const LogicalORExpression
 
 /* TERNARY EXPRESSION */
 
-const TernaryOperatorTrue
+const TernaryAbstractExpressionGuard
+  = ( LOperator, ROperator ) => new RegExp ( `(?=.+?${Utils.escapeRegExp ( LOperator )}.+?${Utils.escapeRegExp ( ROperator )}.+?)` );
+
+const TernaryAbstractExpression
+  = ( LOperator, ROperator, LExpression, RExpression ) => $`${TernaryAbstractExpressionGuard ( LOperator, ROperator )} ${LExpression} ${_} ${LOperator} ${RExpression} ${ROperator} ${RExpression}`;
+
+/* LOGICAL TERNARY EXPRESSION */
+
+const LogicalTernaryOperatorTrue
   = '?';
 
-const TernaryOperatorFalse
+const LogicalTernaryOperatorFalse
   = ':';
 
-const TernaryExpression
-  = $`${LogicalORExpression} ${_} ${TernaryOperatorTrue} ${Expression} ${TernaryOperatorFalse} ${Expression}`;
+const LogicalTernaryExpression
+  = TernaryAbstractExpression ( LogicalTernaryOperatorTrue, LogicalTernaryOperatorFalse, LogicalORExpression, Expression );
 
 /* ROOT */
 

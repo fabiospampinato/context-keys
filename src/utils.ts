@@ -3,6 +3,12 @@
 
 const Utils = {
 
+  escapeRegExp: ( str: string ): string => {
+
+    return str.replace ( /[\\^$.*+?()[\]{}|]/g, char => `\\${char}` );
+
+  },
+
   isArray: ( x: any ): x is any[] => {
 
     return Array.isArray ( x );
