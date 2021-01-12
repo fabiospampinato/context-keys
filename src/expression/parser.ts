@@ -26,7 +26,7 @@ const Source
   = /./;
 
 const _
-  = $`${/[ \t]*/}`;
+  = /[ \t]*/;
 
 /* IDENTIFIER */
 
@@ -34,10 +34,10 @@ const IdentifierStart
   = /[a-zA-Z$_]/;
 
 const IdentifierRest
-  = $`${IdentifierStart} | ${Digit}`;
+  = /[a-zA-Z0-9$_]/;
 
 const Identifier
-  = $`${IdentifierStart} ${IdentifierRest}*`;
+  = /[a-zA-Z$_][a-zA-Z0-9$_]*/;
 
 /* NULL LITERAL */
 
