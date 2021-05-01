@@ -36,7 +36,7 @@ class ContextKeys {
   }
 
   add ( key: Key, value: Value ): void;
-  add ( keys: Keys ): void
+  add ( keys: Keys ): void;
   add ( keys: Key | Keys, value: Value = null ): void {
 
     if ( Utils.isString ( keys ) ) {
@@ -64,16 +64,26 @@ class ContextKeys {
   }
 
   set ( key: Key, value: Value ): void;
-  set ( keys: Keys ): void
+  set ( keys: Keys ): void;
   set ( keys: Key | Keys, value: Value = null ): void {
 
     return this.add.apply ( this, arguments );
 
   }
 
+  register ( key: Key, value: Value ): Disposer;
+  register ( keys: Keys ): Disposer;
+  register ( keys: Key | Keys, value: Value = null ): Disposer {
+
+    this.add.apply ( this, arguments );
+
+    return () => this.remove.apply ( this, arguments );
+
+  }
+
   remove ( key: Key ): void;
-  remove ( keys: Key[] ): void
-  remove ( keys: Keys ): void
+  remove ( keys: Key[] ): void;
+  remove ( keys: Keys ): void;
   remove ( keys: Key | Key[] | Keys ): void {
 
     if ( Utils.isString ( keys ) ) {

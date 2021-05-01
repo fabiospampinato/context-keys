@@ -123,6 +123,42 @@ describe ( 'Context Keys', it => {
 
   });
 
+  describe ( 'register', it => {
+
+    it ( 'can add an object of keys, and return a disposer for them', t => {
+
+      const ck = new ContextKeys ();
+
+      const dispose = ck.register ( Fixtures.keys );
+
+      t.deepEqual ( ck.get (), Fixtures.keysResolved );
+
+      dispose ();
+
+      t.deepEqual ( ck.get (), {} );
+
+    });
+
+    it ( 'can add a single key, and returns a disposer for it', t => {
+
+      const ck = new ContextKeys ();
+
+      const dispose1 = ck.register ( 'foo', true );
+      const dispose2 = ck.register ( 'bar', false );
+      const dispose3 = ck.register ( 'fn', () => [1, 2, 3] );
+
+      t.deepEqual ( ck.get (), { foo: true, bar: false, fn: [1, 2, 3] } );
+
+      dispose1 ();
+      dispose2 ();
+      dispose3 ();
+
+      t.deepEqual ( ck.get (), {} );
+
+    });
+
+  });
+
   describe ( 'remove', it => {
 
     it ( 'can remove an object of keys', t => {
