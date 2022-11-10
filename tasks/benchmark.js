@@ -1,13 +1,15 @@
 
 /* IMPORT */
 
-const {default: ContextKeys} = require ( '../dist' ),
-      Fixtures = require ( '../test/fixtures' ),
-      benchmark = require ( 'benchloop' );
+import benchmark from 'benchloop';
+import ContextKeys from '../dist/index.js';
+import Fixtures from '../test/fixtures.js';
 
-/* BENCHMARK */
+/* HELPERS */
 
 const noop = () => {};
+
+/* MAIN */
 
 benchmark.defaultOptions = Object.assign ( benchmark.defaultOptions, {
   iterations: 10000,

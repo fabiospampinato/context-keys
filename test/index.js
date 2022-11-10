@@ -1,11 +1,11 @@
 
 /* IMPORT */
 
-import {describe} from 'ava-spec';
-import delay from 'promise-resolve-timeout';
-import ContextKeys from '../dist';
-import Expression from '../dist/expression';
-import Fixtures from './fixtures';
+import {describe} from 'fava';
+import {setTimeout as delay} from 'node:timers/promises';
+import ContextKeys from '../dist/index.js';
+import Expression from '../dist/expression/index.js';
+import Fixtures from './fixtures.js';
 
 /* PARSER */
 
@@ -54,7 +54,7 @@ describe ( 'Parser', it => {
 
 /* CONTEXT KEYS */
 
-describe ( 'Context Keys', it => {
+describe ( 'Context Keys', () => {
 
   describe ( 'constructor', it => {
 
@@ -406,8 +406,8 @@ describe ( 'Context Keys', it => {
 
       const ck = new ContextKeys ( Fixtures.keys );
 
-      let callsAllNr = 0,
-          callsKeyNr = 0;
+      let callsAllNr = 0;
+      let callsKeyNr = 0;
 
       ck.onChange ( () => callsAllNr++ );
       ck.onChange ( 'boolean', () => callsKeyNr++ );
@@ -481,9 +481,9 @@ describe ( 'Context Keys', it => {
 
     it ( 'returns a disposer', async t => {
 
-      const ck = new ContextKeys ( Fixtures.keys ),
-            disposeAll = ck.onChange ( () => t.fail () ),
-            dispose = ck.onChange ( 'boolean', () => t.fail () );
+      const ck = new ContextKeys ( Fixtures.keys );
+      const disposeAll = ck.onChange ( () => t.fail () );
+      const dispose = ck.onChange ( 'boolean', () => t.fail () );
 
       disposeAll ();
       dispose ();

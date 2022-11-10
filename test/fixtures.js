@@ -1,5 +1,5 @@
 
-/* FIXTURES */
+/* MAIN */
 
 const Fixtures = {
   keys: {
@@ -32,4 +32,4 @@ const Fixtures = {
 
 /* EXPORT */
 
-module.exports = Fixtures;
+export default Fixtures;

@@ -1,43 +1,51 @@
 
-/* UTILS */
+/* MAIN */
 
 const Utils = {
 
-  isArray: ( x: any ): x is any[] => {
+  /* API */
 
-    return Array.isArray ( x );
+  isArray: ( value: unknown ): value is unknown[] => {
 
-  },
-
-  isFunction: ( x: any ): x is Function => {
-
-    return typeof x === 'function';
+    return Array.isArray ( value );
 
   },
 
-  isString: ( x: any ): x is string => {
+  isFunction: ( value: unknown ): value is Function => {
 
-    return typeof x === 'string';
-
-  },
-
-  isUndefined: ( x: any ): x is undefined => {
-
-    return x === undefined;
+    return typeof value === 'function';
 
   },
 
-  memoize: <T extends Function> ( fn: T ): T => {
+  isString: ( value: unknown ): value is string => {
 
-    // return fn; // Enable this for benchmarking the parser
+    return typeof value === 'string';
 
-    const cache = {};
+  },
 
-    return function memoized ( key: string ) {
+  isUndefined: ( value: unknown ): value is undefined => {
 
-      return cache[key] || ( cache[key] = fn.apply ( undefined, arguments ) );
+    return value === undefined;
 
-    } as unknown as T;
+  },
+
+  memoize: <T, R> ( fn: (( arg: T ) => R) ): (( arg: T ) => R) => {
+
+    const cache = new Map<T, R> ();
+
+    return ( arg: T ): R => {
+
+      const cached = cache.get ( arg );
+
+      if ( cached || cache.has ( arg ) ) return cached as R; //TSC
+
+      const result = fn ( arg );
+
+      cache.set ( arg, result );
+
+      return result;
+
+    };
 
   }
 

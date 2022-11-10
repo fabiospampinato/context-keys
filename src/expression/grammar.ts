@@ -1,9 +1,9 @@
 
 /* IMPORT */
 
-import {Matcher, Parser} from '../types';
+import type {Matcher, Parser} from '../types';
 
-/* GRAMMAR */
+/* MAIN */
 
 const grammar = ( $: Matcher, K: Matcher ): Parser => {
 

@@ -2,7 +2,7 @@
 /* IMPORT */
 
 import {match, parse} from 'reghex';
-import {Expr, Key} from '../types';
+import type {Expr, Key} from '../types';
 import grammar from './grammar';
 
 /* HELPERS */
@@ -26,14 +26,14 @@ const Matchers = {
 
 const Wrapper = parse ( grammar ( Matchers.Pass, Matchers.Key ) );
 
-/* PARSER */
+/* MAIN */
 
 const parser = ( expression: Expr ): [Expr | undefined, Key[]] => {
 
   Keys.found.clear ();
 
-  const wrapped = Wrapper ( expression ),
-        keys = Array.from ( Keys.found );
+  const wrapped = Wrapper ( expression );
+  const keys = Array.from ( Keys.found );
 
   return [wrapped, keys];
 

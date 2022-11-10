@@ -1,13 +1,15 @@
 
 /* IMPORT */
 
-import {Expr, ExprFN, ExprData} from '../types';
-import Utils from '../utils';
+import type {Expr, ExprFN, ExprData} from '../types';
 import parser from './parser';
+import Utils from '../utils';
 
-/* EXPRESSION */
+/* MAIN */
 
 const Expression = {
+
+  /* API */
 
   parseFallback: ( expression: Expr ): ExprData => {
 

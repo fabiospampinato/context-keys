@@ -1,5 +1,5 @@
 
-/* TYPES */
+/* MAIN */
 
 type Value = ValuePrimitive | ValueArray | ValueObject | ValueDynamic;
 type ValuePrimitive = null | boolean | number | string;
@@ -34,4 +34,4 @@ type Parser = ( src: string ) => string | undefined;
 
 /* EXPORT */
 
-export {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer, Matcher, Parser};
+export type {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer, Matcher, Parser};

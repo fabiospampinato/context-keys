@@ -1,21 +1,25 @@
 
 /* IMPORT */
 
-import {Value, Values, Key, Keys, Expr, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer} from './types';
+import type {Value, Values, Key, Keys, Expr, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer} from './types';
 import Expression from './expression';
 import Utils from './utils';
 
-/* CONTEXT KEYS */
+/* MAIN */
 
 class ContextKeys {
 
-  private keys: Keys;
-  private handlers: ChangeHandlerData[];
-  private handlersAll: ChangeAllHandler[];
-  private handlersTree: ChangeHandlersTree;
-  private scheduledKeys: Set<Key>;
+  /* VARIABLES */
+
+  private keys: Keys = {};
+  private handlers: ChangeHandlerData[] = [];
+  private handlersAll: ChangeAllHandler[] = [];
+  private handlersTree: ChangeHandlersTree = {};
+  private scheduledKeys: Set<Key> = new Set ();
   private scheduledId?: number;
   private getBound: Function = this.get.bind ( this );
+
+  /* CONSTRUCTOR */
 
   constructor ( keys?: Keys ) {
 
@@ -29,7 +33,9 @@ class ContextKeys {
 
   }
 
-  has ( key ): boolean {
+  /* API */
+
+  has ( key: string ): boolean {
 
     return !Utils.isUndefined ( this.keys[key] );
 
@@ -259,11 +265,11 @@ class ContextKeys {
 
       handler = handler as ChangeHandler; //TSC
 
-      const exprData = Expression.parse ( expression ),
-            {keys} = exprData,
-            value = Expression.eval ( exprData, this.getBound ),
-            data: ChangeHandlerData = { handler, value },
-            {handlers, handlersTree} = this;
+      const exprData = Expression.parse ( expression );
+      const {keys} = exprData;
+      const value = Expression.eval ( exprData, this.getBound );
+      const data: ChangeHandlerData = { handler, value };
+      const {handlers, handlersTree} = this;
 
       handlers[handlers.length] = data;
 
