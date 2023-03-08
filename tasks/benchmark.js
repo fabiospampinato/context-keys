@@ -11,9 +11,8 @@ const noop = () => {};
 
 /* MAIN */
 
-benchmark.defaultOptions = Object.assign ( benchmark.defaultOptions, {
-  iterations: 10000,
-  log: 'compact',
+benchmark.config ({
+  iterations: 10_000,
   beforeEach: ctx => {
     ctx.ck = new ContextKeys ();
     ctx.ck.add ( Fixtures.keys );
