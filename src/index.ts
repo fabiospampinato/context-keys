@@ -84,7 +84,7 @@ class ContextKeys {
         this.handlers[key]?.forEach ( data => {
 
           const value = data.value;
-          const valueNext = !!data.fn ( this.context );
+          const valueNext = data.fn ( this.context );
 
           if ( value === valueNext ) return;
 
@@ -169,7 +169,7 @@ class ContextKeys {
 
         if ( !expressionData.keys.length ) return noop;
 
-        const value = !!expressionData.fn ( this.context );
+        const value = expressionData.fn ( this.context );
         const data = { ...expressionData, handler, value };
 
         data.keys.forEach ( key => ( this.handlers[key] ||= new Set () ).add ( data ) );

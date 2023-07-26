@@ -13,7 +13,9 @@ const Expr = {
 
   eval: ( expression: Expression, context: ExpressionContext ): boolean => {
 
-    return attempt ( () => !!safex.exec ( expression, context ), false );
+    const data = Expr.parse ( expression );
+
+    return data.fn ( context );
 
   },
 
