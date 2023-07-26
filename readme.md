@@ -9,7 +9,7 @@ Performant and feature rich library for managing context keys.
 - **Flexible**: context keys can be primitives, arrays or plain objects.
 - **Expressive**: expressions are written in a full-fledged subset of JavaScript, this allows you to write complex expressions like `isFoo && ( !isBar || settings.foo[3] === "foo" )`.
 - **Safe**: expressions are executed through [`safex`](https://github.com/fabiospampinato/safex), to ensure they are executed safely.
-- **Batching**: changes are batched and coalesced together for performance automatically.
+- **Batching**: changes happening within a microtask are batched and coalesced together for performance automatically.
 
 ## Install
 
