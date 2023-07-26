@@ -438,6 +438,21 @@ describe ( 'Context Keys', () => {
 
     });
 
+    it ( 'calls a function once when multiple of its keys change', async t => {
+
+      t.plan ( 1 );
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( 'boolean && !string', value => t.is ( value, true ) );
+
+      ck.set ( 'boolean', true );
+      ck.set ( 'string', '' );
+
+      await delay ( 10 );
+
+    });
+
     it ( 'calls specific handlers before global handlers', async t => {
 
       const ck = new ContextKeys ( KEYS );

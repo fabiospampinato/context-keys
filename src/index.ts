@@ -18,7 +18,7 @@ class ContextKeys {
   private context: ExpressionContext;
   private keys: Record<Key | symbol, Value> = {};
   private handlersGlobal: Set<ChangeHandlerGlobal> = new Set ();
-  private handlersLocal: Record<Key, Set<ChangeHandlerData>> = {};
+  private handlersLocal: Record<Key, Record<Expression, { handlers: Set<ChangeHandlerData>, value: boolean }>> = {};
   private scheduled: Set<Key> = new Set ();
 
   /* CONSTRUCTOR */
@@ -55,7 +55,7 @@ class ContextKeys {
 
   private schedule ( key: Key ): void {
 
-    if ( !this.handlersGlobal.size && !this.handlersLocal[key]?.size ) return; // No handlers
+    if ( !this.handlersGlobal.size && !this.handlersLocal[key] ) return; // No handlers
 
     if ( this.scheduled.has ( key ) ) return; // Already scheduled
 
@@ -73,49 +73,31 @@ class ContextKeys {
 
   private trigger (): void {
 
-    /* COLLECTING LOCAL STUFF TO REFRESH */
-
-    const handlersLocals = new Set<ChangeHandlerData> ();
-    const expressionsLocals = new Map<Expression, boolean> ();
+    /* REFRESHING LOCAL HANDLERS */
 
     for ( const key of this.scheduled ) {
 
-      this.handlersLocal[key]?.forEach ( data => {
+      this.scheduled.delete ( key );
 
-        handlersLocals.add ( data );
-        expressionsLocals.set ( data.expression, false );
+      for ( const expression in this.handlersLocal[key] ) {
 
-      });
+        const {value, handlers} = this.handlersLocal[key][expression];
+        const valueNext = this.eval ( expression );
+
+        if ( value === valueNext ) continue;
+
+        handlers.forEach ( data => {
+
+          if ( data.value === valueNext ) return;
+
+          data.value = valueNext;
+          data.handler ( valueNext );
+
+        });
+
+      }
 
     }
-
-    /* RESETTING SCHEDULED KEYS */
-
-    this.scheduled.clear ();
-
-    /* REFRESHING LOCAL EXPRESSIONS, ONCE (!) */
-
-    expressionsLocals.forEach ( ( _, expression ) => {
-
-      const value = Expr.eval ( expression, this.context );
-
-      expressionsLocals.set ( expression, value );
-
-    });
-
-    /* REFRESHING LOCAL HANDLERS */
-
-    handlersLocals.forEach ( data => {
-
-      const value = data.value;
-      const valueNext = !!expressionsLocals.get ( data.expression );
-
-      if ( value === valueNext ) return;
-
-      data.value = valueNext;
-      data.handler ( valueNext );
-
-    });
 
     /* REFRESHING GLOBAL HANDLERS */
 
@@ -200,9 +182,9 @@ class ContextKeys {
         const value = expressionData.fn ( this.context );
         const data = { ...expressionData, handler, value };
 
-        data.keys.forEach ( key => ( this.handlersLocal[key] ||= new Set () ).add ( data ) );
+        data.keys.forEach ( key => ( ( this.handlersLocal[key] ||= {} )[expression] ||= { handlers: new Set (), value: value } ).handlers.add ( data ) );
 
-        return () => data.keys.forEach ( key => this.handlersLocal[key]?.delete ( data ) );
+        return () => data.keys.forEach ( key => this.handlersLocal[key]?.[expression]?.handlers.delete ( data ) );
 
       } else {
 
