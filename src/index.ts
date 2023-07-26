@@ -1,6 +1,7 @@
 
 /* IMPORT */
 
+import isEqual from 'are-deeply-equal';
 import Expr from './expression';
 import {isString, isSymbol, isUndefined, noop, resolve} from './utils';
 import type {Disposer} from './types';
@@ -53,6 +54,10 @@ class ContextKeys {
   }
 
   private schedule ( key: Key ): void {
+
+    if ( !this.handlersAll.size && !this.handlers[key]?.size ) return; // No handlers
+
+    if ( this.scheduled.has ( key ) ) return; // Already scheduled
 
     this.scheduled.add ( key );
 
@@ -144,7 +149,7 @@ class ContextKeys {
 
   set ( key: Key, value: Value ): void {
 
-    if ( this.keys[key] === value ) return;
+    if ( isEqual ( this.keys[key], value ) ) return;
 
     this.keys[key] = value;
 

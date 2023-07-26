@@ -5,7 +5,7 @@ Performant and feature rich library for managing context keys.
 ## Features
 
 - **Universal**: this library works both in the browser and in Node.js.
-- **Performant**: this library is about as fast as it gets, and it has just 1 tiny first-party dependency.
+- **Performant**: this library is about as fast as it gets, and it has just 2 tiny first-party dependencies.
 - **Flexible**: context keys can be primitives, arrays or plain objects.
 - **Expressive**: expressions are written in a full-fledged subset of JavaScript, this allows you to write complex expressions like `isFoo && ( !isBar || settings.foo[3] === "foo" )`.
 - **Safe**: expressions are executed through [`safex`](https://github.com/fabiospampinato/safex), to ensure they are executed safely.

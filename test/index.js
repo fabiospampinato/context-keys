@@ -8,8 +8,6 @@ import {KEYS} from './fixtures.js';
 
 /* MAIN */
 
-//TODO: onchange when setting an equal object not handled
-
 describe ( 'Context Keys', () => {
 
   describe ( 'constructor', it => {
@@ -323,7 +321,7 @@ describe ( 'Context Keys', () => {
       t.is ( callsAllNr, 0 );
       t.is ( callsKeyNr, 0 );
 
-      await delay ( 100 );
+      await delay ( 10 );
 
       t.is ( callsAllNr, 1 );
       t.is ( callsKeyNr, 0 );
@@ -333,7 +331,7 @@ describe ( 'Context Keys', () => {
       t.is ( callsAllNr, 1 );
       t.is ( callsKeyNr, 0 );
 
-      await delay ( 100 );
+      await delay ( 10 );
 
       t.is ( callsAllNr, 2 );
       t.is ( callsKeyNr, 1 );
@@ -353,7 +351,64 @@ describe ( 'Context Keys', () => {
       ck.remove ( 'missing' );
       ck.remove ( 'boolean' );
 
-      await delay ( 100 );
+      await delay ( 10 );
+
+    });
+
+    it ( 'does not react when initializing context keys', async t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( () => t.fail () );
+
+      await delay ( 10 );
+
+      t.pass ();
+
+    });
+
+    it ( 'does not react when setting a key to the same value', async t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( () => t.fail () );
+      ck.onChange ( 'number', () => t.fail () );
+
+      ck.set ( 'number', ck.get ( 'number' ) );
+
+      await delay ( 10 );
+
+      t.pass ();
+
+    });
+
+    it ( 'does not react when setting a key to an equal value', async t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( () => t.fail () );
+      ck.onChange ( 'object', () => t.fail () );
+
+      ck.set ( 'object', { ...ck.get ( 'object' ) } );
+
+      await delay ( 10 );
+
+      t.pass ();
+
+    });
+
+    it ( 'does not react when deleting key that does not exist', async t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( () => t.fail () );
+      ck.onChange ( 'extra', () => t.fail () );
+
+      ck.remove ( 'extra' );
+
+      await delay ( 10 );
+
+      t.pass ();
 
     });
 
@@ -379,7 +434,7 @@ describe ( 'Context Keys', () => {
       ck.set ( 'fnTrue', () => false );
       ck.set ( 'fnFalse', () => true );
 
-      await delay ( 100 );
+      await delay ( 10 );
 
     });
 
@@ -393,7 +448,7 @@ describe ( 'Context Keys', () => {
 
       ck.remove ( 'number' );
 
-      await delay ( 100 );
+      await delay ( 10 );
 
     });
 
@@ -407,7 +462,7 @@ describe ( 'Context Keys', () => {
 
       ck.register ( 'extra', 123 );
 
-      await delay ( 100 );
+      await delay ( 10 );
 
     });
 
@@ -422,7 +477,7 @@ describe ( 'Context Keys', () => {
 
       ck.set ( 'boolean', true );
 
-      await delay ( 100 );
+      await delay ( 10 );
 
       t.pass ();
 
