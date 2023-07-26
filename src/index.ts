@@ -1,9 +1,12 @@
 
 /* IMPORT */
 
-import type {Value, Values, Key, Keys, Expr, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer} from './types';
-import Expression from './expression';
-import Utils from './utils';
+import Expr from './expression';
+import {isString, isSymbol, isUndefined, noop, resolve} from './utils';
+import type {Disposer} from './types';
+import type {ChangeHandler, ChangeHandlerAll, ChangeHandlerData} from './types';
+import type {Expression, ExpressionContext} from './types';
+import type {Key, Value} from './types';
 
 /* MAIN */
 
@@ -11,57 +14,79 @@ class ContextKeys {
 
   /* VARIABLES */
 
-  private keys: Keys = {};
-  private handlers: ChangeHandlerData[] = [];
-  private handlersAll: ChangeAllHandler[] = [];
-  private handlersTree: ChangeHandlersTree = {};
-  private scheduledKeys: Set<Key> = new Set ();
-  private scheduledId?: number;
-  private getBound: Function = this.get.bind ( this );
+  private context: ExpressionContext;
+  private keys: Record<Key | symbol, Value> = {};
+  private handlers: Record<Key, Set<ChangeHandlerData>> = {};
+  private handlersAll: Set<ChangeHandlerAll> = new Set ();
+  private scheduled: Set<Key> = new Set ();
 
   /* CONSTRUCTOR */
 
-  constructor ( keys?: Keys ) {
+  constructor ( keys: Record<Key, Value> = {} ) {
 
-    this.reset ();
+    this.context = this.contextize ( this.keys );
 
-    if ( keys ) {
+    for ( const key in keys ) {
 
-      this.add ( keys );
+      this.set ( key, keys[key] );
 
     }
 
   }
 
-  /* API */
+  /* PRIVATE API */
 
-  has ( key: string ): boolean {
+  private contextize ( keys: Record<Key | symbol, Value> ) {
 
-    return !Utils.isUndefined ( this.keys[key] );
+    // Proxy wrapper used to resolve lazy keys automatically
+
+    return new Proxy ( keys, {
+      get: ( target, key ) => {
+        if ( isSymbol ( key ) ) {
+          return Reflect.get ( target, key );
+        } else {
+          return this.get ( key );
+        }
+      }
+    });
 
   }
 
-  add ( key: Key, value: Value ): void;
-  add ( keys: Keys ): void;
-  add ( keys: Key | Keys, value: Value = null ): void {
+  private schedule ( key: Key ): void {
 
-    if ( Utils.isString ( keys ) ) {
+    this.scheduled.add ( key );
 
-      if ( this.keys[keys] === value ) return;
+    if ( this.scheduled.size > 1 ) return; // Already scheduled
 
-      this.keys[keys] = value;
+    queueMicrotask ( () => {
 
-      this.scheduleChange ( keys );
+      this.trigger ();
 
-    } else {
+    });
 
-      for ( const key in keys ) {
+  }
 
-        if ( this.keys[key] === keys[key] ) continue;
+  private trigger (): void {
 
-        this.keys[key] = keys[key];
+    this.handlersAll.forEach ( handler => handler () );
 
-        this.scheduleChange ( key );
+    while ( this.scheduled.size ) {
+
+      for ( const key of this.scheduled ) {
+
+        this.scheduled.delete ( key );
+
+        this.handlers[key]?.forEach ( data => {
+
+          const value = data.value;
+          const valueNext = !!data.fn ( this.context );
+
+          if ( value === valueNext ) return;
+
+          data.value = valueNext;
+          data.handler ( valueNext );
+
+        });
 
       }
 
@@ -69,257 +94,94 @@ class ContextKeys {
 
   }
 
-  set ( key: Key, value: Value ): void;
-  set ( keys: Keys ): void;
-  set ( keys: Key | Keys, value: Value = null ): void {
+  /* PUBLIC API */
 
-    return this.add.apply ( this, arguments );
+  eval ( expression: Expression ): boolean {
 
-  }
-
-  register ( key: Key, value: Value ): Disposer;
-  register ( keys: Keys ): Disposer;
-  register ( keys: Key | Keys, value: Value = null ): Disposer {
-
-    this.add.apply ( this, arguments );
-
-    return () => this.remove.apply ( this, arguments );
+    return Expr.eval ( expression, this.context );
 
   }
 
-  remove ( key: Key ): void;
-  remove ( keys: Key[] ): void;
-  remove ( keys: Keys ): void;
-  remove ( keys: Key | Key[] | Keys ): void {
+  get ( key: Key ): Value | undefined {
 
-    if ( Utils.isString ( keys ) ) {
+    return resolve ( this.keys[key] );
 
-      this.keys[keys] = undefined;
+  }
 
-      this.scheduleChange ( keys );
+  has ( key: Key ): boolean {
 
-    } else if ( Utils.isArray ( keys ) ) {
+    return !isUndefined ( this.keys[key] );
 
-      for ( let i = 0, l = keys.length; i < l; i++ ) {
+  }
 
-        const key = keys[i];
+  register ( key: Key, value: Value ): Disposer {
 
-        this.keys[key] = undefined;
+    this.set ( key, value );
 
-        this.scheduleChange ( key );
+    return () => this.remove ( key );
 
-      }
+  }
 
-    } else {
+  remove ( key: Key ): void {
 
-      for ( const key in keys ) {
+    if ( !this.has ( key ) ) return;
 
-        this.keys[key] = undefined;
+    delete this.keys[key];
 
-        this.scheduleChange ( key );
-
-      }
-
-    }
+    this.schedule ( key );
 
   }
 
   reset (): void {
 
     this.keys = {};
-    this.handlers = [];
-    this.handlersAll = [];
-    this.handlersTree = {};
-    this.scheduledKeys = new Set ();
-
-    this.scheduleClear ();
+    this.context = this.contextize ( this.keys );
+    this.handlers = {};
+    this.handlersAll = new Set ();
+    this.scheduled = new Set ();
 
   }
 
-  get ( key: Key ): Value | undefined;
-  get ( keys: Key[] ): Values;
-  get (): Values;
-  get ( key?: Key | Key[] ): Value | Values | undefined {
+  set ( key: Key, value: Value ): void {
 
-    if ( Utils.isString ( key ) ) {
+    if ( this.keys[key] === value ) return;
 
-      const value = this.keys[key];
+    this.keys[key] = value;
 
-      return Utils.isFunction ( value ) ? value () : value;
+    this.schedule ( key );
 
-    } else if ( Utils.isArray ( key ) ) {
+  }
 
-      const values: Values = {};
+  onChange ( handler: ChangeHandlerAll ): Disposer;
+  onChange ( expression: Expression, handler: ChangeHandler ): Disposer;
+  onChange ( expression: Expression | ChangeHandlerAll, handler: ChangeHandler = noop ): Disposer {
 
-      for ( let i = 0, l = key.length; i < l; i++ ) {
+    try {
 
-        const k = key[i],
-              value = this.keys[k];
+      if ( isString ( expression ) ) {
 
-        if ( Utils.isUndefined ( value ) ) continue;
+        const expressionData = Expr.parse ( expression );
 
-        values[k] = Utils.isFunction ( value ) ? value () : value;
+        if ( !expressionData.keys.length ) return noop;
+
+        const value = !!expressionData.fn ( this.context );
+        const data = { ...expressionData, handler, value };
+
+        data.keys.forEach ( key => ( this.handlers[key] ||= new Set () ).add ( data ) );
+
+        return () => data.keys.forEach ( key => this.handlers[key]?.delete ( data ) );
+
+      } else {
+
+        this.handlersAll.add ( expression );
+
+        return () => this.handlersAll.delete ( expression );
 
       }
 
-      return values;
+    } catch {
 
-    } else {
-
-      const values: Values = {};
-
-      for ( const key in this.keys ) {
-
-        const value = this.keys[key];
-
-        if ( Utils.isUndefined ( value ) ) continue;
-
-        values[key] = Utils.isFunction ( value ) ? value () : value;
-
-      }
-
-      return values;
-
-    }
-
-  }
-
-  eval ( expression: Expr ): boolean {
-
-    return Expression.eval ( expression, this.getBound );
-
-  }
-
-  private scheduleChange ( key: Key ): void {
-
-    this.scheduledKeys.add ( key );
-
-    if ( this.scheduledId ) return;
-
-    this.scheduledId = setTimeout ( () => {
-
-      delete this.scheduledId;
-
-      this.scheduleTrigger ();
-
-    });
-
-  }
-
-  private scheduleClear (): void {
-
-    if ( !this.scheduledId ) return;
-
-    clearTimeout ( this.scheduledId );
-
-    delete this.scheduledId;
-
-  }
-
-  private scheduleTrigger (): void {
-
-    const handlersMap: Map<ChangeHandler, boolean> = new Map ();
-
-    for ( const key of this.scheduledKeys ) {
-
-      const handlersByKey = this.handlersTree[key];
-
-      if ( !handlersByKey ) continue;
-
-      for ( const expression in handlersByKey ) {
-
-        const handlersByExpression = handlersByKey[expression],
-              value = this.eval ( expression );
-
-        for ( let i = 0, l = handlersByExpression.length; i < l; i++ ) {
-
-          const data = handlersByExpression[i];
-
-          if ( value === data.value ) continue;
-
-          data.value = value;
-
-          const {handler} = data;
-
-          handlersMap.set ( handler, value );
-
-        }
-
-      }
-
-    }
-
-    this.scheduledKeys = new Set ();
-
-    this.handlersAll.forEach ( handler => handler () );
-
-    handlersMap.forEach ( ( value, handler ) => handler ( value ) );
-
-  }
-
-  onChange ( handler: ChangeAllHandler ): Disposer;
-  onChange ( expression: Expr, handler: ChangeHandler ): Disposer;
-  onChange ( expression: Expr | ChangeAllHandler, handler?: ChangeHandler ): Disposer {
-
-    if ( Utils.isString ( expression ) ) {
-
-      handler = handler as ChangeHandler; //TSC
-
-      const exprData = Expression.parse ( expression );
-      const {keys} = exprData;
-      const value = Expression.eval ( exprData, this.getBound );
-      const data: ChangeHandlerData = { handler, value };
-      const {handlers, handlersTree} = this;
-
-      handlers[handlers.length] = data;
-
-      for ( let i = 0, l = keys.length; i < l; i++ ) {
-
-        const key = keys[i];
-
-        if ( !handlersTree[key] ) handlersTree[key] = {};
-
-        const handlersByKey = handlersTree[key];
-
-        if ( !handlersByKey[expression] ) handlersByKey[expression] = [];
-
-        const handlersByExpression = handlersByKey[expression];
-
-        handlersByExpression[handlersByExpression.length] = data;
-
-      }
-
-      return () => {
-
-        handlers.splice ( handlers.indexOf ( data ), 1 );
-
-        for ( let i = 0, l = keys.length; i < l; i++ ) {
-
-          const key = keys[i];
-
-          if ( !handlersTree[key] ) continue;
-
-          const handlersByKey = handlersTree[key];
-
-          if ( !handlersByKey[expression] ) handlersByKey[expression] = [];
-
-          const handlersByExpression = handlersByKey[expression];
-
-          handlersByExpression.splice ( handlersByExpression.indexOf ( data ), 1 );
-
-        }
-
-      };
-
-    } else {
-
-      this.handlersAll.push ( expression );
-
-      return () => {
-
-        this.handlersAll = this.handlersAll.filter ( h => h !== expression );
-
-      };
+      return noop;
 
     }
 

@@ -1,56 +1,68 @@
 
 /* MAIN */
 
-const Utils = {
+const isFunction = ( value: unknown ): value is Function => {
 
-  /* API */
+  return typeof value === 'function';
 
-  isArray: ( value: unknown ): value is unknown[] => {
+};
 
-    return Array.isArray ( value );
+const isString = ( value: unknown ): value is string => {
 
-  },
+  return typeof value === 'string';
 
-  isFunction: ( value: unknown ): value is Function => {
+};
 
-    return typeof value === 'function';
+const isSymbol = ( value: unknown ): value is symbol => {
 
-  },
+  return typeof value === 'symbol';
 
-  isString: ( value: unknown ): value is string => {
+};
 
-    return typeof value === 'string';
+const isUndefined = ( value: unknown ): value is undefined => {
 
-  },
+  return value === undefined;
 
-  isUndefined: ( value: unknown ): value is undefined => {
+};
 
-    return value === undefined;
+const memoize = <T, R> ( fn: (( arg: T ) => R) ): (( arg: T ) => R) => {
 
-  },
+  const cache = new Map<T, R> ();
 
-  memoize: <T, R> ( fn: (( arg: T ) => R) ): (( arg: T ) => R) => {
+  return ( arg: T ): R => {
 
-    const cache = new Map<T, R> ();
+    const cached = cache.get ( arg );
 
-    return ( arg: T ): R => {
+    if ( cached ) return cached;
 
-      const cached = cache.get ( arg );
+    const result = fn ( arg );
 
-      if ( cached || cache.has ( arg ) ) return cached as R; //TSC
+    cache.set ( arg, result );
 
-      const result = fn ( arg );
+    return result;
 
-      cache.set ( arg, result );
+  };
 
-      return result;
+};
 
-    };
+const noop = (): void => {
 
-  }
+  return;
+
+};
+
+const nope = (): false => {
+
+  return false;
+
+};
+
+const resolve = <T> ( value: T | (() => T) ): T => {
+
+  return isFunction ( value ) ? value () : value;
 
 };
 
 /* EXPORT */
 
-export default Utils;
+export {isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve};

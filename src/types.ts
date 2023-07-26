@@ -1,37 +1,23 @@
 
 /* MAIN */
 
-type Value = ValuePrimitive | ValueArray | ValueObject | ValueDynamic;
-type ValuePrimitive = null | boolean | number | string;
-type ValueArray = ValueStatic[];
-type ValueObject = { [key: string]: ValueStatic };
-type ValueDynamic = () => ValueStatic;
-type ValueStatic = ValuePrimitive | ValueArray | ValueObject;
-type Values = Record<string, Value>;
+type Disposer = () => void;
+
+type ChangeHandler = ( value: boolean ) => void;
+type ChangeHandlerAll = () => void;
+type ChangeHandlerData = ExpressionData & { handler: ChangeHandler, value: boolean | undefined };
+
+type Expression = string;
+type ExpressionContext = Record<string, unknown>;
+type ExpressionFunction = ( context: ExpressionContext ) => boolean;
+type ExpressionData = { expression: Expression, keys: Key[], fn: ExpressionFunction };
 
 type Key = string;
-type Keys = Record<string, Value | undefined>;
-
-type Expr = string;
-type ExprFN = () => boolean;
-type ExprData = {
-  expression: Expr,
-  keys: Key[],
-  fn: ExprFN
-};
-
-type ChangeAllHandler = () => void;
-type ChangeHandler = ( value: boolean ) => void;
-type ChangeHandlerData = {
-  handler: ChangeHandler,
-  value: boolean
-};
-type ChangeHandlersTree = Record<Key, Record<Expr, ChangeHandlerData[]>>;
-
-type Disposer = () => void;
-type Matcher = ( quasis: TemplateStringsArray, ...re: (string | RegExp | (() => string | RegExp))[] ) => any;
-type Parser = ( src: string ) => string | undefined;
+type Value = (() => unknown) | unknown;
 
 /* EXPORT */
 
-export type {Value, Values, Key, Keys, Expr, ExprFN, ExprData, ChangeAllHandler, ChangeHandler, ChangeHandlerData, ChangeHandlersTree, Disposer, Matcher, Parser};
+export type {Disposer};
+export type {ChangeHandler, ChangeHandlerAll, ChangeHandlerData};
+export type {Expression, ExpressionContext, ExpressionFunction, ExpressionData};
+export type {Key, Value};

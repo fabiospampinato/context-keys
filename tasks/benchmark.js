@@ -3,115 +3,16 @@
 
 import benchmark from 'benchloop';
 import ContextKeys from '../dist/index.js';
-import Fixtures from '../test/fixtures.js';
-
-/* HELPERS */
-
-const noop = () => {};
+import {noop} from '../dist/utils.js';
+import {KEYS} from '../test/fixtures.js';
 
 /* MAIN */
 
 benchmark.config ({
   iterations: 10_000,
   beforeEach: ctx => {
-    ctx.ck = new ContextKeys ();
-    ctx.ck.add ( Fixtures.keys );
-  },
-  afterEach: ctx => {
-    ctx.ck.reset ();
+    ctx.ck = new ContextKeys ( KEYS );
   }
-});
-
-benchmark ({
-  name: 'has',
-  fn: ctx => {
-    ctx.ck.has ( 'boolean' );
-  }
-});
-
-benchmark.group ( 'add', () => {
-
-  benchmark ({
-    name: 'string',
-    fn: ( ctx, i ) => {
-      ctx.ck.add ( String ( i ), true );
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-  benchmark ({
-    name: 'object',
-    fn: ( ctx, i ) => {
-      ctx.ck.add ({ [i]: true });
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-});
-
-benchmark.group ( 'remove', () => {
-
-  benchmark ({
-    name: 'string',
-    fn: ctx => {
-      ctx.ck.remove ( 'boolean' );
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-  benchmark ({
-    name: 'array',
-    fn: ctx => {
-      ctx.ck.remove ([ 'boolean', 'string' ]);
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-  benchmark ({
-    name: 'object',
-    fn: ctx => {
-      ctx.ck.remove ( Fixtures.keys );
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-});
-
-benchmark ({
-  name: 'reset',
-  fn: ctx => {
-    ctx.ck.reset ();
-  }
-});
-
-benchmark.group ( 'get', () => {
-
-  benchmark ({
-    name: 'single',
-    fn: ctx => {
-      ctx.ck.get ( 'boolean' );
-    }
-  });
-
-  benchmark ({
-    name: 'array',
-    fn: ctx => {
-      ctx.ck.get ([ 'boolean', 'string' ]);
-    }
-  });
-
-  benchmark ({
-    name: 'all',
-    fn: ctx => {
-      ctx.ck.get ();
-    }
-  });
-
 });
 
 benchmark.group ( 'eval', () => {
@@ -174,6 +75,102 @@ benchmark.group ( 'eval', () => {
 
 });
 
+benchmark ({
+  name: 'get',
+  fn: ctx => {
+    ctx.ck.get ( 'boolean' );
+  }
+});
+
+benchmark ({
+  name: 'has',
+  fn: ctx => {
+    ctx.ck.has ( 'boolean' );
+  }
+});
+
+benchmark ({
+  name: 'remove',
+  fn: ctx => {
+    ctx.ck.remove ( 'boolean' );
+    ctx.ck.trigger ();
+  }
+});
+
+benchmark ({
+  name: 'reset',
+  fn: ctx => {
+    ctx.ck.reset ();
+  }
+});
+
+benchmark ({
+  name: 'set',
+  fn: ( ctx, i ) => {
+    ctx.ck.set ( String ( i ), true );
+    ctx.ck.trigger ();
+  }
+});
+
+benchmark.group ( 'trigger', () => {
+
+  benchmark ({
+    name: 'expression:nonexistent',
+    before: ctx => {
+      ctx.ck = new ContextKeys ();
+      ctx.ck.set ( KEYS );
+      for ( let i = 0, l = 1000; i < l; i++ ) {
+        ctx.ck.onChange ( 'boolean', noop );
+        ctx.ck.onChange ( 'boolean && string', noop );
+        ctx.ck.onChange ( 'foo && bar', noop );
+      }
+    },
+    beforeEach: noop,
+    fn: ctx => {
+      ctx.ck.set ( 'nonexistent', true );
+      ctx.ck.set ( 'boolean', false );
+      ctx.ck.trigger ();
+    }
+  });
+
+  benchmark ({
+    name: 'expression:general',
+    before: ctx => {
+      ctx.ck = new ContextKeys ();
+      ctx.ck.set ( KEYS );
+      for ( let i = 0, l = 1000; i < l; i++ ) {
+        ctx.ck.onChange ( noop );
+        ctx.ck.onChange ( noop );
+        ctx.ck.onChange ( noop );
+      }
+    },
+    beforeEach: noop,
+    fn: ( ctx, i ) => {
+      ctx.ck.set ( 'boolean', !!( i % 2 ) );
+      ctx.ck.trigger ();
+    }
+  });
+
+  benchmark ({
+    name: 'expression:existent',
+    before: ctx => {
+      ctx.ck = new ContextKeys ();
+      ctx.ck.set ( KEYS );
+      for ( let i = 0, l = 1000; i < l; i++ ) {
+        ctx.ck.onChange ( 'boolean', noop );
+        ctx.ck.onChange ( 'boolean && string', noop );
+        ctx.ck.onChange ( 'foo && bar', noop );
+      }
+    },
+    beforeEach: noop,
+    fn: ( ctx, i ) => {
+      ctx.ck.set ( 'boolean', !!( i % 2 ) );
+      ctx.ck.trigger ();
+    }
+  });
+
+});
+
 benchmark.group ( 'onChange', () => {
 
   benchmark ({
@@ -198,7 +195,7 @@ benchmark.group ( 'onChange', () => {
     name: 'remove:general',
     beforeEach: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Fixtures.keys );
+      ctx.ck.set ( KEYS );
       ctx.disposers = [
         ctx.ck.onChange ( noop ),
         ctx.ck.onChange ( noop ),
@@ -216,7 +213,7 @@ benchmark.group ( 'onChange', () => {
     name: 'remove:expression',
     beforeEach: ctx => {
       ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Fixtures.keys );
+      ctx.ck.set ( KEYS );
       ctx.disposers = [
         ctx.ck.onChange ( 'boolean', noop ),
         ctx.ck.onChange ( 'boolean && string', noop ),
@@ -227,68 +224,6 @@ benchmark.group ( 'onChange', () => {
       for ( let i = 0, l = ctx.disposers.length; i < l; i++ ) {
         ctx.disposers[i]();
       }
-    }
-  });
-
-});
-
-benchmark.group ( 'trigger', () => {
-
-  benchmark ({
-    name: 'expression:nonexistent',
-    before: ctx => {
-      ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Fixtures.keys );
-      for ( let i = 0, l = 1000; i < l; i++ ) {
-        ctx.ck.onChange ( 'boolean', noop );
-        ctx.ck.onChange ( 'boolean && string', noop );
-        ctx.ck.onChange ( 'foo && bar', noop );
-      }
-    },
-    beforeEach: noop,
-    fn: ctx => {
-      ctx.ck.set ( 'nonexistent', true );
-      ctx.ck.set ( 'boolean', false );
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-  benchmark ({
-    name: 'expression:general',
-    before: ctx => {
-      ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Fixtures.keys );
-      for ( let i = 0, l = 1000; i < l; i++ ) {
-        ctx.ck.onChange ( noop );
-        ctx.ck.onChange ( noop );
-        ctx.ck.onChange ( noop );
-      }
-    },
-    beforeEach: noop,
-    fn: ( ctx, i ) => {
-      ctx.ck.set ( 'boolean', !!( i % 2 ) );
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
-    }
-  });
-
-  benchmark ({
-    name: 'expression:existent',
-    before: ctx => {
-      ctx.ck = new ContextKeys ();
-      ctx.ck.add ( Fixtures.keys );
-      for ( let i = 0, l = 1000; i < l; i++ ) {
-        ctx.ck.onChange ( 'boolean', noop );
-        ctx.ck.onChange ( 'boolean && string', noop );
-        ctx.ck.onChange ( 'foo && bar', noop );
-      }
-    },
-    beforeEach: noop,
-    fn: ( ctx, i ) => {
-      ctx.ck.set ( 'boolean', !!( i % 2 ) );
-      ctx.ck.scheduleTrigger ();
-      ctx.ck.scheduleClear ();
     }
   });
 

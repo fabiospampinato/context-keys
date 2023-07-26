@@ -4,55 +4,11 @@
 import {describe} from 'fava';
 import {setTimeout as delay} from 'node:timers/promises';
 import ContextKeys from '../dist/index.js';
-import Expression from '../dist/expression/index.js';
-import Fixtures from './fixtures.js';
+import {KEYS} from './fixtures.js';
 
-/* PARSER */
+/* MAIN */
 
-describe ( 'Parser', it => {
-
-  it ( 'Accepts all the supported syntax', t => {
-
-    const expression = `null || true && false || 123 || 123 !== NaN || 123 !== undefined || 'str' || "str" || \`str\` || '\\n\\\\' || ( true ? 123 : false ) || 123 === 123 || 123 !== 123 || 123 == 123 || 123 != 123 || 123 <= 123 || 123 >= 123 || 123 < 123 || 123 > 123 || 123 + 123 || 123 - 123 || 123 * 123 || 123 / 123 || 123 % 123 || +123 || -123 || !123 || !( false || !( true ) ) || foo || foo123 || FoO || !foo || foo[0]['str'] || foo.bar.baz`;
-
-    t.true ( Expression.check ( expression ) );
-
-  });
-
-  it ( 'Rejects all the unsupported syntax', t => {
-
-    const expressions = [
-      ';',
-      '()',
-      '0xff',
-      '123 | 123',
-      '123 ^ 123',
-      '123 & 123',
-      '123 << 123',
-      '123 >>> 123',
-      '123 >> 123',
-      '~123',
-      'function () {}',
-      '/foo/',
-      'eval ( "123" )',
-      'window.eval ( "123" )',
-      'foo.indexOf ( null ) > 0',
-      'foo[0]["str"].startsWith ( "str", 123 )'
-    ];
-
-    for ( let i = 0, l = expressions.length; i < l; i++ ) {
-
-      const expression = expressions[i];
-
-      t.false ( Expression.check ( expression ) );
-
-    }
-
-  });
-
-});
-
-/* CONTEXT KEYS */
+//TODO: onchange when setting an equal object not handled
 
 describe ( 'Context Keys', () => {
 
@@ -62,182 +18,21 @@ describe ( 'Context Keys', () => {
 
       const ck = new ContextKeys ();
 
-      t.deepEqual ( ck.get (), {} );
+      t.deepEqual ( ck.keys, {} );
 
     });
 
     it ( 'supports initial keys', t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      t.deepEqual ( ck.get (), Fixtures.keysResolved );
-
-    });
-
-  });
-
-  describe ( 'has', it => {
-
-    it ( 'checks if a context key is defined', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      t.true ( ck.has ( 'boolean' ) );
-      t.true ( ck.has ( 'fnTrue' ) );
-      t.true ( ck.has ( 'fnFalse' ) );
-      t.false ( ck.has ( 'test' ) );
-
-      ck.remove ( 'boolean' );
-      ck.remove ( 'fnTrue' );
-
-      t.false ( ck.has ( 'boolean' ) );
-      t.false ( ck.has ( 'fnTrue' ) );
-
-    });
-
-  });
-
-  describe ( 'add', it => {
-
-    it ( 'can add an object of keys', t => {
-
-      const ck = new ContextKeys ();
-
-      ck.add ( Fixtures.keys );
-
-      t.deepEqual ( ck.get (), Fixtures.keysResolved );
-
-    });
-
-    it ( 'can add a single key', t => {
-
-      const ck = new ContextKeys ();
-
-      ck.add ( 'foo', true );
-      ck.add ( 'bar', false );
-      ck.add ( 'fn', () => [1, 2, 3] );
-
-      t.deepEqual ( ck.get (), { foo: true, bar: false, fn: [1, 2, 3] } );
-
-    });
-
-  });
-
-  describe ( 'register', it => {
-
-    it ( 'can add an object of keys, and return a disposer for them', t => {
-
-      const ck = new ContextKeys ();
-
-      const dispose = ck.register ( Fixtures.keys );
-
-      t.deepEqual ( ck.get (), Fixtures.keysResolved );
-
-      dispose ();
-
-      t.deepEqual ( ck.get (), {} );
-
-    });
-
-    it ( 'can add a single key, and returns a disposer for it', t => {
-
-      const ck = new ContextKeys ();
-
-      const dispose1 = ck.register ( 'foo', true );
-      const dispose2 = ck.register ( 'bar', false );
-      const dispose3 = ck.register ( 'fn', () => [1, 2, 3] );
-
-      t.deepEqual ( ck.get (), { foo: true, bar: false, fn: [1, 2, 3] } );
-
-      dispose1 ();
-      dispose2 ();
-      dispose3 ();
-
-      t.deepEqual ( ck.get (), {} );
-
-    });
-
-  });
-
-  describe ( 'remove', it => {
-
-    it ( 'can remove an object of keys', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      ck.remove ( Fixtures.keys );
-
-      t.deepEqual ( ck.get (), {} );
-
-    });
-
-    it ( 'can remove an array of keys', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      ck.remove ([ 'boolean', 'string', 'object', 'fnTrue' ]);
-
-      t.deepEqual ( ck.get (), { null: null, number: 123, fnFalse: false } );
-
-    });
-
-    it ( 'can remove a single key', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      ck.remove ( 'boolean' );
-      ck.remove ( 'string' );
-      ck.remove ( 'object' );
-      ck.remove ( 'fnTrue' );
-
-      t.deepEqual ( ck.get (), { null: null, number: 123, fnFalse: false } );
-
-    });
-
-  });
-
-  describe ( 'reset', it => {
-
-    it ( 'can remove all keys', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      ck.reset ();
-
-      t.deepEqual ( ck.get (), {} );
-
-    });
-
-  });
-
-  describe ( 'get', it => {
-
-    it ( 'can retrieve all values', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      t.deepEqual ( ck.get (), Fixtures.keysResolved );
-
-    });
-
-    it ( 'can retrieve multiple values', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
-      const result = ck.get ([ 'boolean', 'string', 'fnTrue' ]);
-
-      t.deepEqual ( result, { boolean: false, string: 'str', fnTrue: true } );
-
-    });
-
-    it ( 'can retrieve a single value', t => {
-
-      const ck = new ContextKeys ( Fixtures.keys );
-
+      const ck = new ContextKeys ( KEYS );
+
+      t.is ( ck.get ( 'null' ), null );
+      t.is ( ck.get ( 'number' ), 123 );
+      t.is ( ck.get ( 'boolean' ), false );
+      t.is ( ck.get ( 'string' ), 'str' );
       t.is ( ck.get ( 'fnTrue' ), true );
       t.is ( ck.get ( 'fnFalse' ), false );
-      t.is ( ck.get ( 'null' ), null );
-      t.is ( ck.get ( 'xxx' ), undefined );
+      t.deepEqual ( ck.get ( 'object' ), { foo: { bar: true } } );
 
     });
 
@@ -247,7 +42,7 @@ describe ( 'Context Keys', () => {
 
     it ( 'can evaluate an expression', t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       t.is ( ck.eval ( 'string' ), true );
       t.is ( ck.eval ( 'boolean || number' ), true );
@@ -265,9 +60,9 @@ describe ( 'Context Keys', () => {
 
     });
 
-    it ( 'can evaluate an expression that doesn\'t use any variables', t => {
+    it ( 'can evaluate an expression that does not use any variables', t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       t.is ( ck.eval ( '    ' ), false );
       t.is ( ck.eval ( 'yield' ), false );
@@ -315,14 +110,8 @@ describe ( 'Context Keys', () => {
       t.is ( ck.eval ( '`\\\\`' ), true );
       t.is ( ck.eval ( '`\\0`' ), true );
       t.is ( ck.eval ( '`\\n`' ), true );
-      t.is ( ck.eval ( 'true ? true : false' ), true );
-      t.is ( ck.eval ( 'true ? false : false' ), false );
-      t.is ( ck.eval ( 'false ? false : true' ), true );
-      t.is ( ck.eval ( 'false ? false : false' ), false );
-      t.is ( ck.eval ( 'true ? (true ? false : true) : false' ), false );
       t.is ( ck.eval ( 'true || false' ), true );
       t.is ( ck.eval ( 'false || false' ), false );
-      t.is ( ck.eval ( 'false || (true?123:0)' ), true );
       t.is ( ck.eval ( 'true && false' ), false );
       t.is ( ck.eval ( 'false && false' ), false );
       t.is ( ck.eval ( 'true && true' ), true );
@@ -378,7 +167,7 @@ describe ( 'Context Keys', () => {
 
     it ( 'works with invalid expressions', t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       t.is ( ck.eval ( 'function () {}' ), false );
       t.is ( ck.eval ( 'const foo = 123' ), false );
@@ -389,7 +178,7 @@ describe ( 'Context Keys', () => {
 
     it ( 'works with invalid keys', t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       t.is ( ck.eval ( 'isMissing' ), false );
       t.is ( ck.eval ( 'string && isMissing' ), false );
@@ -400,11 +189,126 @@ describe ( 'Context Keys', () => {
 
   });
 
+  describe ( 'get', it => {
+
+    it ( 'can retrieve a single value', t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      t.is ( ck.get ( 'fnTrue' ), true );
+      t.is ( ck.get ( 'fnFalse' ), false );
+      t.is ( ck.get ( 'null' ), null );
+      t.is ( ck.get ( 'xxx' ), undefined );
+
+    });
+
+  });
+
+  describe ( 'has', it => {
+
+    it ( 'checks if a context key is defined', t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      t.true ( ck.has ( 'boolean' ) );
+      t.true ( ck.has ( 'fnTrue' ) );
+      t.true ( ck.has ( 'fnFalse' ) );
+      t.false ( ck.has ( 'test' ) );
+
+      ck.remove ( 'boolean' );
+      ck.remove ( 'fnTrue' );
+
+      t.false ( ck.has ( 'boolean' ) );
+      t.false ( ck.has ( 'fnTrue' ) );
+
+    });
+
+  });
+
+  describe ( 'register', it => {
+
+    it ( 'can add a single key, and returns a disposer for it', t => {
+
+      const ck = new ContextKeys ();
+
+      const dispose1 = ck.register ( 'foo', true );
+      const dispose2 = ck.register ( 'bar', false );
+      const dispose3 = ck.register ( 'fn', () => [1, 2, 3] );
+
+      t.is ( ck.get ( 'foo' ), true );
+      t.is ( ck.get ( 'bar' ), false );
+      t.deepEqual ( ck.get ( 'fn' ), [1, 2, 3] );
+
+      dispose1 ();
+      dispose2 ();
+      dispose3 ();
+
+      t.deepEqual ( ck.keys, {} );
+
+    });
+
+  });
+
+  describe ( 'remove', it => {
+
+    it ( 'can remove a single key', t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.remove ( 'boolean' );
+      ck.remove ( 'string' );
+      ck.remove ( 'object' );
+      ck.remove ( 'fnTrue' );
+
+      t.is ( ck.get ( 'null' ), null );
+      t.is ( ck.get ( 'number' ), 123 );
+      t.is ( ck.get ( 'boolean' ), undefined );
+      t.is ( ck.get ( 'string' ), undefined );
+      t.is ( ck.get ( 'fnTrue' ), undefined );
+      t.is ( ck.get ( 'fnFalse' ), false );
+      t.is ( ck.get ( 'object' ), undefined );
+
+    });
+
+  });
+
+  describe ( 'reset', it => {
+
+    it ( 'can remove all keys', t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.reset ();
+
+      t.deepEqual ( ck.keys, {} );
+
+    });
+
+  });
+
+  describe ( 'set', it => {
+
+    it ( 'can add a single key', t => {
+
+      const ck = new ContextKeys ();
+
+      ck.set ( 'foo', true );
+      ck.set ( 'bar', false );
+      ck.set ( 'fn', () => [1, 2, 3] );
+
+      t.is ( ck.get ( 'foo' ), true );
+      t.is ( ck.get ( 'bar' ), false );
+      t.deepEqual ( ck.get ( 'fn' ), [1, 2, 3] );
+
+    });
+
+  });
+
   describe ( 'onChange', it => {
 
     it ( 'batches and coaleshes calls together', async t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       let callsAllNr = 0;
       let callsKeyNr = 0;
@@ -440,7 +344,7 @@ describe ( 'Context Keys', () => {
 
       t.plan ( 1 );
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       ck.onChange ( ( ...args ) => t.deepEqual ( args, [] ) );
 
@@ -453,11 +357,11 @@ describe ( 'Context Keys', () => {
 
     });
 
-    it ( 'calls a function when a property changes', async t => {
+    it ( 'calls a function when a key changes', async t => {
 
       t.plan ( 6 );
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
 
       ck.onChange ( 'boolean', value => t.is ( value, true ) );
       ck.onChange ( 'boolean', value => t.is ( value, true ) );
@@ -479,9 +383,37 @@ describe ( 'Context Keys', () => {
 
     });
 
+    it ( 'reacts to keys being deleted too', async t => {
+
+      t.plan ( 1 );
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( 'number', value => t.is ( value, false ) );
+
+      ck.remove ( 'number' );
+
+      await delay ( 100 );
+
+    });
+
+    it ( 'reacts to keys being registered too', async t => {
+
+      t.plan ( 1 );
+
+      const ck = new ContextKeys ( KEYS );
+
+      ck.onChange ( 'extra', value => t.is ( value, true ) );
+
+      ck.register ( 'extra', 123 );
+
+      await delay ( 100 );
+
+    });
+
     it ( 'returns a disposer', async t => {
 
-      const ck = new ContextKeys ( Fixtures.keys );
+      const ck = new ContextKeys ( KEYS );
       const disposeAll = ck.onChange ( () => t.fail () );
       const dispose = ck.onChange ( 'boolean', () => t.fail () );
 

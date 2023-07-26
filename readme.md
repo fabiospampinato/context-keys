@@ -5,30 +5,11 @@ Performant and feature rich library for managing context keys.
 ## Features
 
 - **Universal**: this library works both in the browser and in Node.js.
-- **Performant**: this library is about as fast as it gets, and it has just 1 tiny dependency.
-- **Flexible**: Context keys can be primitives, arrays or plain objects.
-- **Expressive**: Expressions are written in a full-fledged subset of JavaScript, this allows you to write complex expressions like `isFoo && ( !isBar || settings.foo[3] === "foo" )`.
+- **Performant**: this library is about as fast as it gets, and it has just 1 tiny first-party dependency.
+- **Flexible**: context keys can be primitives, arrays or plain objects.
+- **Expressive**: expressions are written in a full-fledged subset of JavaScript, this allows you to write complex expressions like `isFoo && ( !isBar || settings.foo[3] === "foo" )`.
+- **Safe**: expressions are executed through [`safex`](https://github.com/fabiospampinato/safex), to ensure they are executed safely.
 - **Batching**: changes are batched and coalesced together for performance automatically.
-
-## Expression Syntax
-
-An expression is a string which will be evalued to a boolean, you'll use expressions to query your context keys.
-
-Expressions are written in a subset of JavaScript where only the following features are enabled:
-
-- **Primitives**: `null`, `true`, `false`, `number`, `string`.
-- **Logical operators**: `&&`, `||`.
-- **Equality operators**: `===`, `!==`, `==`, `!=`.
-- **Relational operators**: `<=`, `>=`, `<`, `>`.
-- **Ternary operator**: `? :`.
-- **Additive operators**: `+`, `-`.
-- **Multiplicative operators**: `*`, `/`, `%`.
-- **Unary operators**: `+`, `-`, `!`.
-- **Property access**: `[]`, `.`.
-- **Parentheses groups**: `(`, `)`.
-- **Variables**: all your context keys will be accessible as if they were regular variables, but you can't define new ones in an expression.
-
-Basically an expression is what you'd usually put inside an `if` statement.
 
 ## Install
 
@@ -41,41 +22,40 @@ npm install --save context-keys
 The following interface is provided:
 
 ```ts
-type Value = null | boolean | number | string | Array<Value> | { [key: string]: Value } | () => Value;
-type Values = Record<string, Value>;
-type Key = string;
-type Keys = Record<string, Value | undefined>;
-type Expr = string;
-type ChangeAllHandler = () => void;
 type ChangeHandler = ( value: boolean ) => void;
+type ChangeAllHandler = () => void;
 type Disposer = () => void;
+type Expression = string;
+type Key = string;
+type Value = unknown;
 
 class ContextKeys {
 
-  constructor ( keys?: Keys ); // Create a new instance, optionally adding an object of context keys
+  // Create a new instance, optionally with some context keys
+  constructor ( keys?: Record<Key, Value> );
 
-  has ( key: Key : boolean; // Checks if a context key is defined
+  // Evaluate an expression to a boolean
+  eval ( expression: Expression ): boolean;
 
-  add ( key: Key, value: Value ): void; // Add a single context key
-  add ( keys: Keys ): void; // Add an object of context keys
+  // Get the value of a context key
+  get ( key: Key ): Value | undefined;
 
-  set ( key: Key, value: Value ): void; // An alias for the "add" method
-  set ( keys: Keys ): void; // And alias for the "add" method
+  // Checks if a context key is defined
+  has ( key: Key ) : boolean;
 
-  remove ( key: Key ): void; // Remove a single context key
-  remove ( keys: Key[] ): void; // Remove an array of context keys
-  remove ( keys: Keys ): void; // Remove an object of context keys
+  // Remove single context key
+  remove ( key: Key ): void;
 
-  reset (): void; // Remove all context keys and change handlers
+  // Remove all context keys and change handlers
+  reset (): void;
 
-  get ( key: Key ): Value | undefined; // Get the value of a context key
-  get ( keys: Key[] ): Values; // Get the value of an array of context keys
-  get (): Values; // Get the value of all context keys
+  // Add or update a context key
+  set ( key: Key, value: Value ): void;
 
-  eval ( expression: Expr ): boolean; // Evaluate an expression to a boolean
-
-  onChange ( handler: ChangeAllHandler ): Disposer; // Register a callback which will be called whenever any context key changes
-  onChange ( expression: Expr, handler: ChangeHandler ): Disposer; // Register a callback which will be called whenever the value of the expression changes. Call the disposer to unregister the callback
+  // Register a callback which will be called whenever any context key changes
+  onChange ( handler: ChangeAllHandler ): Disposer;
+  // Register a callback which will be called whenever the value of the expression changes. Call the disposer to unregister the callback
+  onChange ( expression: Expr, handler: ChangeHandler ): Disposer;
 
 }
 ```
@@ -85,42 +65,59 @@ You can use it like this:
 ```ts
 import ContextKeys from 'context-keys';
 
-const ck = new ContextKeys ({ foo: true }); // Create a new instance with an object of context keys
+// Create a new instance, with some context keys already
 
-ck.reset (); // Remove all context keys
-
-ck.add ({ // Add multiple context keys
+const ck = new ContextKeys ({
   isFoo: true,
-  isBar: false,
-  settings: {
-    foo: [1, 2, 3]
-    bar: true
-  }
+  isBar: false
 });
 
-ck.add ( 'isBaz', false ); // Add a single context key
+// Evaluate an expression
 
-ck.remove ( 'isBaz' ); // Remove a single context key
+ck.eval ( 'isFoo' ); // => true
+ck.eval ( 'isBar' ); // => false
+ck.eval ( 'isBaz' ); // => undefined
+ck.eval ( 'isFoo && isBar || 123' ); // => 123
 
-console.log ( ck.get ( 'isFoo' ) ); // => true
-console.log ( ck.get ( 'isBaz' ) ); // => undefined
+// Get the value of a context key
 
-console.log ( ck.eval ( 'isFoo || isBar' ) ); // => true
-console.log ( ck.eval ( 'isFoo && ( isBar || !settings.bar || settings.foo.length > 1 )' ) ); // => true
+ck.get ( 'isFoo' ); // => true
+ck.get ( 'isBar' ); // => false
+ck.get ( 'isBaz' ); // => undefined
 
-ck.onChange ( () => { // Register a general onChange handler
-  console.log ( 'Something changed!' );
+// Check if a context key is defined
+
+ck.has ( 'isFoo' ); // => true
+ck.has ( 'isBar' ); // => true
+ck.has ( 'isBaz' ); // => undefined
+
+// Set the value of a context key
+
+ck.set ( isBar, true );
+ck.set ( isBaz, 123 );
+
+// Remove a context key
+
+ck.remove ( 'isBaz' );
+
+// Remove all context keys and change handlers
+
+ck.reset ();
+
+// Register a global onChange handler
+
+ck.onChange ( () => {
+  console.log ( 'Some context key changed!' );
 });
 
-ck.onChange ( 'isFoo', value => { // Register an onChange handler
-  console.log ( 'isFoo changed!' );
+// Register an expression-specific onChange handler
+
+const dispose = ck.onChange ( 'isFoo', value => {
+  console.log ( 'The result of the expression changed!' );
 });
 
-ck.set ( 'isFoo', true ); // Same value as before, no change handlers are called
-ck.set ( 'isFoo', false ); // The related change handlers are called
+dispose (); // Dispose of that listener
 ```
-
-Check also our [test suite](./test/index.js) for more examples.
 
 ## License
 
