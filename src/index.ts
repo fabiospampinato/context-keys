@@ -73,8 +73,6 @@ class ContextKeys {
 
   private trigger (): void {
 
-    this.handlersAll.forEach ( handler => handler () );
-
     while ( this.scheduled.size ) {
 
       for ( const key of this.scheduled ) {
@@ -96,6 +94,8 @@ class ContextKeys {
       }
 
     }
+
+    this.handlersAll.forEach ( handler => handler () );
 
   }
 

@@ -438,6 +438,23 @@ describe ( 'Context Keys', () => {
 
     });
 
+    it ( 'calls specific handlers before global handlers', async t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      let calls = '';
+
+      ck.onChange ( () => calls += 'g' );
+      ck.onChange ( 'extra', () => calls += 'l' );
+
+      ck.set ( 'extra', 123 );
+
+      await delay ( 10 );
+
+      t.is ( calls, 'lg' );
+
+    });
+
     it ( 'reacts to keys being deleted too', async t => {
 
       t.plan ( 1 );
