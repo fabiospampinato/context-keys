@@ -5,7 +5,7 @@ import isEqual from 'are-deeply-equal';
 import Expr from './expression';
 import {isString, isSymbol, isUndefined, noop, resolve} from './utils';
 import type {Disposer} from './types';
-import type {ChangeHandler, ChangeHandlerAll, ChangeHandlerData} from './types';
+import type {ChangeHandlerGlobal, ChangeHandlerLocal, ChangeHandlerData} from './types';
 import type {Expression, ExpressionContext} from './types';
 import type {Key, Value} from './types';
 
@@ -17,8 +17,8 @@ class ContextKeys {
 
   private context: ExpressionContext;
   private keys: Record<Key | symbol, Value> = {};
-  private handlers: Record<Key, Set<ChangeHandlerData>> = {};
-  private handlersAll: Set<ChangeHandlerAll> = new Set ();
+  private handlersGlobal: Set<ChangeHandlerGlobal> = new Set ();
+  private handlersLocal: Record<Key, Set<ChangeHandlerData>> = {};
   private scheduled: Set<Key> = new Set ();
 
   /* CONSTRUCTOR */
@@ -55,7 +55,7 @@ class ContextKeys {
 
   private schedule ( key: Key ): void {
 
-    if ( !this.handlersAll.size && !this.handlers[key]?.size ) return; // No handlers
+    if ( !this.handlersGlobal.size && !this.handlersLocal[key]?.size ) return; // No handlers
 
     if ( this.scheduled.has ( key ) ) return; // Already scheduled
 
@@ -73,29 +73,41 @@ class ContextKeys {
 
   private trigger (): void {
 
-    while ( this.scheduled.size ) {
+    const handlersLocals = new Set<ChangeHandlerData> ();
 
-      for ( const key of this.scheduled ) {
+    for ( const key of this.scheduled ) {
 
-        this.scheduled.delete ( key );
+      const handlers = this.handlersLocal[key];
 
-        this.handlers[key]?.forEach ( data => {
+      if ( !handlers?.size ) continue;
 
-          const value = data.value;
-          const valueNext = data.fn ( this.context );
-
-          if ( value === valueNext ) return;
-
-          data.value = valueNext;
-          data.handler ( valueNext );
-
-        });
-
-      }
+      handlers.forEach ( data => handlersLocals.add ( data ) );
 
     }
 
-    this.handlersAll.forEach ( handler => handler () );
+    this.scheduled.clear ();
+
+    if ( handlersLocals.size ) {
+
+      handlersLocals.forEach ( data => {
+
+        const value = data.value;
+        const valueNext = data.fn ( this.context );
+
+        if ( value === valueNext ) return;
+
+        data.value = valueNext;
+        data.handler ( valueNext );
+
+      });
+
+    }
+
+    if ( this.handlersGlobal.size ) {
+
+      this.handlersGlobal.forEach ( handler => handler () );
+
+    }
 
   }
 
@@ -141,8 +153,8 @@ class ContextKeys {
 
     this.keys = {};
     this.context = this.contextize ( this.keys );
-    this.handlers = {};
-    this.handlersAll = new Set ();
+    this.handlersGlobal = new Set ();
+    this.handlersLocal = {};
     this.scheduled = new Set ();
 
   }
@@ -157,9 +169,9 @@ class ContextKeys {
 
   }
 
-  onChange ( handler: ChangeHandlerAll ): Disposer;
-  onChange ( expression: Expression, handler: ChangeHandler ): Disposer;
-  onChange ( expression: Expression | ChangeHandlerAll, handler: ChangeHandler = noop ): Disposer {
+  onChange ( handler: ChangeHandlerGlobal ): Disposer;
+  onChange ( expression: Expression, handler: ChangeHandlerLocal ): Disposer;
+  onChange ( expression: Expression | ChangeHandlerGlobal, handler: ChangeHandlerLocal = noop ): Disposer {
 
     try {
 
@@ -172,15 +184,15 @@ class ContextKeys {
         const value = expressionData.fn ( this.context );
         const data = { ...expressionData, handler, value };
 
-        data.keys.forEach ( key => ( this.handlers[key] ||= new Set () ).add ( data ) );
+        data.keys.forEach ( key => ( this.handlersLocal[key] ||= new Set () ).add ( data ) );
 
-        return () => data.keys.forEach ( key => this.handlers[key]?.delete ( data ) );
+        return () => data.keys.forEach ( key => this.handlersLocal[key]?.delete ( data ) );
 
       } else {
 
-        this.handlersAll.add ( expression );
+        this.handlersGlobal.add ( expression );
 
-        return () => this.handlersAll.delete ( expression );
+        return () => this.handlersGlobal.delete ( expression );
 
       }
 

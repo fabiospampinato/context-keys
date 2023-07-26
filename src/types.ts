@@ -3,9 +3,9 @@
 
 type Disposer = () => void;
 
-type ChangeHandler = ( value: boolean ) => void;
-type ChangeHandlerAll = () => void;
-type ChangeHandlerData = ExpressionData & { handler: ChangeHandler, value: boolean | undefined };
+type ChangeHandlerGlobal = () => void;
+type ChangeHandlerLocal = ( value: boolean ) => void;
+type ChangeHandlerData = ExpressionData & { handler: ChangeHandlerLocal, value: boolean | undefined };
 
 type Expression = string;
 type ExpressionContext = Record<string, unknown>;
@@ -18,6 +18,6 @@ type Value = (() => unknown) | unknown;
 /* EXPORT */
 
 export type {Disposer};
-export type {ChangeHandler, ChangeHandlerAll, ChangeHandlerData};
+export type {ChangeHandlerGlobal, ChangeHandlerLocal, ChangeHandlerData};
 export type {Expression, ExpressionContext, ExpressionFunction, ExpressionData};
 export type {Key, Value};
