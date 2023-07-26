@@ -73,41 +73,57 @@ class ContextKeys {
 
   private trigger (): void {
 
+    /* COLLECTING LOCAL STUFF TO REFRESH */
+
     const handlersLocals = new Set<ChangeHandlerData> ();
+    const expressionsLocals = new Map<Expression, boolean> ();
 
     for ( const key of this.scheduled ) {
 
-      const handlers = this.handlersLocal[key];
+      this.handlersLocal[key]?.forEach ( data => {
 
-      if ( !handlers?.size ) continue;
-
-      handlers.forEach ( data => handlersLocals.add ( data ) );
-
-    }
-
-    this.scheduled.clear ();
-
-    if ( handlersLocals.size ) {
-
-      handlersLocals.forEach ( data => {
-
-        const value = data.value;
-        const valueNext = data.fn ( this.context );
-
-        if ( value === valueNext ) return;
-
-        data.value = valueNext;
-        data.handler ( valueNext );
+        handlersLocals.add ( data );
+        expressionsLocals.set ( data.expression, false );
 
       });
 
     }
 
-    if ( this.handlersGlobal.size ) {
+    /* RESETTING SCHEDULED KEYS */
 
-      this.handlersGlobal.forEach ( handler => handler () );
+    this.scheduled.clear ();
 
-    }
+    /* REFRESHING LOCAL EXPRESSIONS, ONCE (!) */
+
+    expressionsLocals.forEach ( ( _, expression ) => {
+
+      const value = Expr.eval ( expression, this.context );
+
+      expressionsLocals.set ( expression, value );
+
+    });
+
+    /* REFRESHING LOCAL HANDLERS */
+
+    handlersLocals.forEach ( data => {
+
+      const value = data.value;
+      const valueNext = !!expressionsLocals.get ( data.expression );
+
+      if ( value === valueNext ) return;
+
+      data.value = valueNext;
+      data.handler ( valueNext );
+
+    });
+
+    /* REFRESHING GLOBAL HANDLERS */
+
+    this.handlersGlobal.forEach ( handler => {
+
+      handler ();
+
+    });
 
   }
 
