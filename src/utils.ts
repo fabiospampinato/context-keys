@@ -77,6 +77,12 @@ const resolve = <T> ( value: T | (() => T) ): T => {
 
 };
 
+const uniq = <T> ( values: T[] ): T[] => {
+
+  return Array.from ( new Set ( values ) );
+
+};
+
 /* EXPORT */
 
-export {attempt, isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve};
+export {attempt, isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve, uniq};
