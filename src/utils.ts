@@ -79,6 +79,8 @@ const resolve = <T> ( value: T | (() => T) ): T => {
 
 const uniq = <T> ( values: T[] ): T[] => {
 
+  if ( values.length <= 1 ) return values;
+
   return Array.from ( new Set ( values ) );
 
 };
