@@ -75,11 +75,17 @@ class ContextKeys {
 
     /* REFRESHING LOCAL HANDLERS */
 
+    const handledExpressions: Record<Expression, boolean> = {};
+
     for ( const key of this.scheduled ) {
 
       this.scheduled.delete ( key );
 
       for ( const expression in this.handlersLocal[key] ) {
+
+        if ( handledExpressions[expression] ) continue;
+
+        handledExpressions[expression] = true;
 
         const {value, handlers} = this.handlersLocal[key][expression];
         const valueNext = this.eval ( expression );
