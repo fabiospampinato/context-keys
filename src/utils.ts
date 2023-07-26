@@ -1,6 +1,20 @@
 
 /* MAIN */
 
+const attempt = <T, U> ( fn: () => T, fallback: U ): T | U => {
+
+  try {
+
+    return fn ();
+
+  } catch {
+
+    return fallback;
+
+  }
+
+};
+
 const isFunction = ( value: unknown ): value is Function => {
 
   return typeof value === 'function';
@@ -65,4 +79,4 @@ const resolve = <T> ( value: T | (() => T) ): T => {
 
 /* EXPORT */
 
-export {isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve};
+export {attempt, isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve};

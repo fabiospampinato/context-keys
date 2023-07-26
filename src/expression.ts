@@ -2,7 +2,7 @@
 /* IMPORT */
 
 import safex from 'safex';
-import {memoize, nope} from './utils';
+import {attempt, memoize, nope} from './utils';
 import type {Expression, ExpressionContext, ExpressionData} from './types';
 
 /* MAIN */
@@ -13,15 +13,7 @@ const Expr = {
 
   eval: ( expression: Expression, context: ExpressionContext ): boolean => {
 
-    try {
-
-      return !!safex.exec ( expression, context );
-
-    } catch {
-
-      return false;
-
-    }
+    return attempt ( () => !!safex.exec ( expression, context ), false );
 
   },
 
@@ -32,7 +24,7 @@ const Expr = {
       const tokens = safex.tokenize ( expression );
       const keys = tokens.map ( token => token.type === 'identifier' ? token.value : '' ).filter ( Boolean );
       const compiled = safex.compile ( expression );
-      const fn = ( context: ExpressionContext ) => !!compiled ( context );
+      const fn = ( context: ExpressionContext ) => attempt ( () => !!compiled ( context ), false );
 
       return { expression, keys, fn };
 
