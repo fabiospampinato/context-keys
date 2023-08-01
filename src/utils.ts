@@ -15,6 +15,12 @@ const attempt = <T, U> ( fn: () => T, fallback: U ): T | U => {
 
 };
 
+const isArray = ( value: unknown ): value is unknown[] => {
+
+  return Array.isArray ( value );
+
+};
+
 const isFunction = ( value: unknown ): value is Function => {
 
   return typeof value === 'function';
@@ -87,4 +93,4 @@ const uniq = <T> ( values: T[] ): T[] => {
 
 /* EXPORT */
 
-export {attempt, isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve, uniq};
+export {attempt, isArray, isFunction, isString, isSymbol, isUndefined, memoize, noop, nope, resolve, uniq};
