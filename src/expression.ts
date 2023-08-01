@@ -50,7 +50,7 @@ const Expr = {
 
       const ast = safex.parse ( expression );
       const keys = uniq ( Expr.extract ( ast ) );
-      const compiled = safex.compile ( expression );
+      const compiled = safex.compile ( ast );
       const fn = ( context: ExpressionContext ) => attempt ( () => !!compiled ( context ), false );
 
       return { expression, keys, fn };
