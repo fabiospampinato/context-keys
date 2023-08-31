@@ -457,6 +457,30 @@ describe ( 'Context Keys', () => {
 
     });
 
+    it ( 'calls a function when a key changes, back and forth', async t => {
+
+      const ck = new ContextKeys ( KEYS );
+
+      let calls = 0;
+
+      ck.onChange ( 'boolean', () => calls += 1 );
+
+      ck.set ( 'boolean', true );
+
+      await delay ( 10 );
+
+      ck.set ( 'boolean', false );
+
+      await delay ( 10 );
+
+      ck.set ( 'boolean', true );
+
+      await delay ( 10 );
+
+      t.is ( calls, 3 );
+
+    });
+
     it ( 'calls a function once when multiple of its keys change', async t => {
 
       t.plan ( 1 );

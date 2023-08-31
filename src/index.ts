@@ -87,12 +87,14 @@ class ContextKeys {
 
         handledExpressions[expression] = true;
 
-        const {value, handlers} = this.handlersLocal[key][expression];
+        const data = this.handlersLocal[key][expression];
         const valueNext = this.eval ( expression );
 
-        if ( value === valueNext ) continue;
+        if ( data.value === valueNext ) continue;
 
-        handlers.forEach ( data => {
+        data.value = valueNext;
+
+        data.handlers.forEach ( data => {
 
           if ( data.value === valueNext ) return;
 
