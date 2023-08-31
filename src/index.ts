@@ -129,6 +129,20 @@ class ContextKeys {
 
   }
 
+  getAll (): Record<Key, Value | undefined> {
+
+    const values: Record<Key, Value | undefined> = {};
+
+    for ( const key in this.keys ) {
+
+      values[key] = this.get ( key );
+
+    }
+
+    return values;
+
+  }
+
   has ( key: Key ): boolean {
 
     return !isUndefined ( this.keys[key] );

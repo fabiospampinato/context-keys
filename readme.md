@@ -40,6 +40,9 @@ class ContextKeys {
   // Get the value of a context key
   get ( key: Key ): Value | undefined;
 
+  // Get the values of all context keys
+  getAll (): Record<Key, Value | undefined>;
+
   // Checks if a context key is defined
   has ( key: Key ) : boolean;
 
@@ -84,6 +87,10 @@ ck.eval ( 'isFoo && isBar || 123' ); // => 123
 ck.get ( 'isFoo' ); // => true
 ck.get ( 'isBar' ); // => false
 ck.get ( 'isBaz' ); // => undefined
+
+// Get the values of all context keys
+
+ck.getAll (); // => { isFoo: true, isBar: false }
 
 // Check if a context key is defined
 

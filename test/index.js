@@ -202,6 +202,25 @@ describe ( 'Context Keys', () => {
 
   });
 
+  describe ( 'getAll', it => {
+
+    it ( 'can retrieve all values', t => {
+
+      const ck = new ContextKeys ( KEYS );
+      const values = ck.getAll ();
+
+      t.is ( values.null, null );
+      t.is ( values.number, 123 );
+      t.is ( values.boolean, false );
+      t.is ( values.string, 'str' );
+      t.is ( values.fnTrue, true );
+      t.is ( values.fnFalse, false );
+      t.deepEqual ( values.object, { foo: { bar: true } } );
+
+    });
+
+  });
+
   describe ( 'has', it => {
 
     it ( 'checks if a context key is defined', t => {
