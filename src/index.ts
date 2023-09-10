@@ -90,7 +90,7 @@ class ContextKeys {
         const data = this.handlersLocal[key][expression];
         const valueNext = this.eval ( expression );
 
-        if ( data.value === valueNext ) continue;
+        // if ( data.value === valueNext ) continue; // This is a risky optimization to make, better not to
 
         data.value = valueNext;
 
