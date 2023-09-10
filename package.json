@@ -2,7 +2,7 @@
   "name": "context-keys",
   "repository": "github:fabiospampinato/context-keys",
   "description": "Performant and feature rich library for managing context keys.",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "type": "module",
   "main": "dist/index.js",
   "exports": "./dist/index.js",
