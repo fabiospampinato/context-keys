@@ -4,7 +4,7 @@
 import safex from 'safex';
 import {attempt, isArray, isString, memoize, nope, uniq} from './utils';
 import type {Expression, ExpressionContext, ExpressionData} from './types';
-import type {Node} from 'safex/dist/types';
+import type {Node} from 'safex';
 
 /* MAIN */
 

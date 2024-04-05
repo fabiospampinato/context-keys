@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "are-deeply-equal": "^1.0.2",
-    "safex": "^2.1.0"
+    "safex": "^2.1.1"
   },
   "devDependencies": {
     "benchloop": "^2.1.1",
